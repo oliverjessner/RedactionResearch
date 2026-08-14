@@ -1,0 +1,17 @@
+node_modules/
+dist/
+build/
+.next/
+coverage/
+src-tauri/target/
+src-tauri/gen/
+.DS_Store
+*.log
+.env
+.env.*
+!.env.example
+client_secret.json
+*.db
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
