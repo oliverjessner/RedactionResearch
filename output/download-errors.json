@@ -1,0 +1,1304 @@
+[
+  {
+    "document_id": "234231",
+    "title": "Lagebericht Ukraine 2021",
+    "file_url": "https://media.frag-den-staat.de/files/foi/727494/anhang-7.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:16:29.519Z"
+  },
+  {
+    "document_id": "234232",
+    "title": "Lagebericht Afghanistan 2016",
+    "file_url": "https://media.frag-den-staat.de/files/foi/727494/anhang-1.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:16:34.645Z"
+  },
+  {
+    "document_id": "234236",
+    "title": "Lagebericht Ukraine 2017",
+    "file_url": "https://media.frag-den-staat.de/files/foi/727494/anhang-6.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:17:44.526Z"
+  },
+  {
+    "document_id": "234230",
+    "title": "Lagebericht Irak 2016",
+    "file_url": "https://media.frag-den-staat.de/files/foi/727494/anhang-4.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:17:45.106Z"
+  },
+  {
+    "document_id": "234233",
+    "title": "Lagebericht Afghanistan 2017",
+    "file_url": "https://media.frag-den-staat.de/files/foi/727494/anhang-2.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:18:13.571Z"
+  },
+  {
+    "document_id": "248315",
+    "title": "2023-01-31-vera-deleja-hotko-2023-01-31-auswaertiges-amt_geschwaerzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/918489/2023-01-31-vera-deleja-hotko-2023-01-31-auswaertiges-amt_geschwaerzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:18:32.230Z"
+  },
+  {
+    "document_id": "246578",
+    "title": "dsv-lsb-protokoll-9-1-10-geschwaerzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/896993/dsv-lsb-protokoll-9-1-10-geschwaerzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:23:31.611Z"
+  },
+  {
+    "document_id": "256696",
+    "title": "2025-03-11-klage-vg-schleswig-kempen-geschwarzt",
+    "file_url": null,
+    "error": "Candidate has no file_url",
+    "failed_at": "2026-08-15T11:24:14.409Z"
+  },
+  {
+    "document_id": "256561",
+    "title": "zb-3621s72360-2021-4-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/zb-3621s72360-2021-4-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:31:13.189Z"
+  },
+  {
+    "document_id": "256378",
+    "title": "4853003-2021-0051-3619s72273-bmu-datenblatt-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/4853003-2021-0051-3619s72273-bmu-datenblatt-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:31:13.924Z"
+  },
+  {
+    "document_id": "256419",
+    "title": "aw-3621s72360-zwischenbericht-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/aw-3621s72360-zwischenbericht-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:33:09.031Z"
+  },
+  {
+    "document_id": "256553",
+    "title": "zb-3618s62575-2020-3-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/zb-3618s62575-2020-3-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:33:11.429Z"
+  },
+  {
+    "document_id": "250251",
+    "title": "151203xx-nord-stream-2-gbr-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/151203xx-nord-stream-2-gbr-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:33:12.454Z"
+  },
+  {
+    "document_id": "250264",
+    "title": "151022-bm-vorlage-rechtliche-bewertung-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/151022-bm-vorlage-rechtliche-bewertung-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:33:12.520Z"
+  },
+  {
+    "document_id": "256550",
+    "title": "zb-3618s62571-2019-q3-20191009-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/zb-3618s62571-2019-q3-20191009-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:33:13.220Z"
+  },
+  {
+    "document_id": "250262",
+    "title": "151023-nos2-tep-short-de-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/151023-nos2-tep-short-de-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:33:13.274Z"
+  },
+  {
+    "document_id": "250252",
+    "title": "151202xx-nord-stream-2-ndl-en-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/151202xx-nord-stream-2-ndl-en-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:33:14.050Z"
+  },
+  {
+    "document_id": "256412",
+    "title": "abschlussbericht-evaluation-von-konzepten-minamata-5-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/abschlussbericht-evaluation-von-konzepten-minamata-5-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:33:14.700Z"
+  },
+  {
+    "document_id": "250218",
+    "title": "anlage-as-1-ns-2-ag-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/anlage-as-1-ns-2-ag-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:33:14.996Z"
+  },
+  {
+    "document_id": "256409",
+    "title": "9-grs-vertrag-zu-vorhaben-3621s62280-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/9-grs-vertrag-zu-vorhaben-3621s62280-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:33:15.687Z"
+  },
+  {
+    "document_id": "250249",
+    "title": "151207xx-nord-stream-2-bm-fra-en-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/151207xx-nord-stream-2-bm-fra-en-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:33:16.053Z"
+  },
+  {
+    "document_id": "256460",
+    "title": "stellungnahme-grundsatzpapier-uberarbeitung-icrp-empfehlungen-entwurf-grs-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/stellungnahme-grundsatzpapier-uberarbeitung-icrp-empfehlungen-entwurf-grs-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:33:16.647Z"
+  },
+  {
+    "document_id": "250219",
+    "title": "anlage-as-1-ns-2-ag-2-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/anlage-as-1-ns-2-ag-2-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:33:18.495Z"
+  },
+  {
+    "document_id": "250259",
+    "title": "151027-xx-rolle-der-erweiterung-der-nord-stream-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/151027-xx-rolle-der-erweiterung-der-nord-stream-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:33:20.036Z"
+  },
+  {
+    "document_id": "256600",
+    "title": "imp-4716e03240-schlussbericht-gemass-ss-13-abfe-bmu-20200128-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/imp-4716e03240-schlussbericht-gemass-ss-13-abfe-bmu-20200128-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:33:20.859Z"
+  },
+  {
+    "document_id": "256403",
+    "title": "4853003-2021-0052-ab-3621s62280-grs-a-4127-20240515-pdf-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/4853003-2021-0052-ab-3621s62280-grs-a-4127-20240515-pdf-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:33:21.511Z"
+  },
+  {
+    "document_id": "276277",
+    "title": "scan-20260531-224412_geschwaerzt",
+    "file_url": null,
+    "error": "Candidate has no file_url",
+    "failed_at": "2026-08-15T11:34:14.033Z"
+  },
+  {
+    "document_id": "256469",
+    "title": "um22i01100-mail-vom-02-06-2022-geschwarzt-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/um22i01100-mail-vom-02-06-2022-geschwarzt-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:35:25.346Z"
+  },
+  {
+    "document_id": "256601",
+    "title": "leistungsbeschreibung-fortfuhrung-abfallkataster-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/leistungsbeschreibung-fortfuhrung-abfallkataster-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:35:26.166Z"
+  },
+  {
+    "document_id": "256352",
+    "title": "3622s62589-rev1-va5363-20240312-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/3622s62589-rev1-va5363-20240312-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:35:27.097Z"
+  },
+  {
+    "document_id": "256336",
+    "title": "3621s62570-datenblatt-2021-fortfuhrung-abfallkataster-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/3621s62570-datenblatt-2021-fortfuhrung-abfallkataster-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:35:28.487Z"
+  },
+  {
+    "document_id": "256494",
+    "title": "20220630-an-grs-beauftragung-um22i01100-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/20220630-an-grs-beauftragung-um22i01100-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:35:29.181Z"
+  },
+  {
+    "document_id": "256316",
+    "title": "20221201-bfs-info-vertrag-zu-3622s62589-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/20221201-bfs-info-vertrag-zu-3622s62589-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:35:30.061Z"
+  },
+  {
+    "document_id": "256542",
+    "title": "vbs-mk-618s62571-datenblatt-forschungsplan-2018-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/vbs-mk-618s62571-datenblatt-forschungsplan-2018-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:35:30.815Z"
+  },
+  {
+    "document_id": "256463",
+    "title": "stellungnahme-zum-zb-des-3-quartals-2022-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/stellungnahme-zum-zb-des-3-quartals-2022-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:35:32.585Z"
+  },
+  {
+    "document_id": "256333",
+    "title": "20240514-an-bfs-s-i-2-4840006-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/20240514-an-bfs-s-i-2-4840006-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:35:32.681Z"
+  },
+  {
+    "document_id": "256323",
+    "title": "20231128-bfs-3621s72360-zustimmung-zum-anderungsdienst-rev-5-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/20231128-bfs-3621s72360-zustimmung-zum-anderungsdienst-rev-5-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:35:35.185Z"
+  },
+  {
+    "document_id": "256325",
+    "title": "20231128-grs-aw-3621s72360-zustimmung-zum-anderungsdienst-rev-5-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/20231128-grs-aw-3621s72360-zustimmung-zum-anderungsdienst-rev-5-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:35:35.830Z"
+  },
+  {
+    "document_id": "249308",
+    "title": "9-sitzung08-november2023-geschwrzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/865693/9-sitzung08-november2023-geschwrzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:35:51.455Z"
+  },
+  {
+    "document_id": "234235",
+    "title": "Lagebericht Irak 2015",
+    "file_url": "https://media.frag-den-staat.de/files/foi/727494/anhang-3.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:36:01.522Z"
+  },
+  {
+    "document_id": "240252",
+    "title": "2023-09-08-awb-landeskriminalamt-nordrheinwestfahlen-clannamen_geschwaerzt",
+    "file_url": null,
+    "error": "Candidate has no file_url",
+    "failed_at": "2026-08-15T11:36:20.533Z"
+  },
+  {
+    "document_id": "244045",
+    "title": "btnord-servicevertrag_geschwaerzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/853229/btnord-servicevertrag_geschwaerzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:37:00.596Z"
+  },
+  {
+    "document_id": "256572",
+    "title": "20210222-reisebericht-tuv-sud-geschwarzt-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/20210222-reisebericht-tuv-sud-geschwarzt-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:40:29.810Z"
+  },
+  {
+    "document_id": "256544",
+    "title": "vertrag-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/vertrag-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:40:30.479Z"
+  },
+  {
+    "document_id": "256467",
+    "title": "um22i01100-mail-vom-01-07-2022-2-geschwarzt-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/um22i01100-mail-vom-01-07-2022-2-geschwarzt-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:40:34.437Z"
+  },
+  {
+    "document_id": "250256",
+    "title": "151118-sachstand-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/151118-sachstand-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:40:37.617Z"
+  },
+  {
+    "document_id": "250222",
+    "title": "anlage1-briefhousegop-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/anlage1-briefhousegop-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:40:38.358Z"
+  },
+  {
+    "document_id": "256470",
+    "title": "vermerk-fachbegleitung-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/vermerk-fachbegleitung-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:40:38.563Z"
+  },
+  {
+    "document_id": "256346",
+    "title": "3621s72360-zwischenbericht-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/3621s72360-zwischenbericht-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:40:39.237Z"
+  },
+  {
+    "document_id": "256545",
+    "title": "vertrag-rechtlich-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/vertrag-rechtlich-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:40:40.681Z"
+  },
+  {
+    "document_id": "250265",
+    "title": "151021-gu-nordstream-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/151021-gu-nordstream-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:40:41.517Z"
+  },
+  {
+    "document_id": "250258",
+    "title": "151104nord-stream-papier-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/151104nord-stream-papier-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:40:42.254Z"
+  },
+  {
+    "document_id": "250281",
+    "title": "150618-xx-bm-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/150618-xx-bm-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:40:42.540Z"
+  },
+  {
+    "document_id": "256237",
+    "title": "20180831-vertrag-3618s22365-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/20180831-vertrag-3618s22365-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:40:45.174Z"
+  },
+  {
+    "document_id": "256547",
+    "title": "wg-vorhaben-3621s72360-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/wg-vorhaben-3621s72360-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:40:45.530Z"
+  },
+  {
+    "document_id": "256541",
+    "title": "vermerk-fachbegleitung-1-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/vermerk-fachbegleitung-1-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:40:45.939Z"
+  },
+  {
+    "document_id": "250211",
+    "title": "anlage-1a-vollmacht-lsp-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/anlage-1a-vollmacht-lsp-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:40:48.074Z"
+  },
+  {
+    "document_id": "250280",
+    "title": "150624-xx-bm-sefcovic-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/150624-xx-bm-sefcovic-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:40:48.833Z"
+  },
+  {
+    "document_id": "250228",
+    "title": "ageb-awt-2019-geschwarzt-d",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/ageb-awt-2019-geschwarzt-d.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:40:49.574Z"
+  },
+  {
+    "document_id": "256227",
+    "title": "20180614-3618s22365-leistungsbeschreibung-final-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/20180614-3618s22365-leistungsbeschreibung-final-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:40:52.539Z"
+  },
+  {
+    "document_id": "256253",
+    "title": "20190513-zb-1-q-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/20190513-zb-1-q-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:40:56.457Z"
+  },
+  {
+    "document_id": "256239",
+    "title": "20181114-3618s22365-ad-zustimmung-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/20181114-3618s22365-ad-zustimmung-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:40:58.063Z"
+  },
+  {
+    "document_id": "256630",
+    "title": "20211129-3621s72360-teibescheinigung-gez-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/20211129-3621s72360-teibescheinigung-gez-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:00.888Z"
+  },
+  {
+    "document_id": "256573",
+    "title": "20210222-reisebericht-tuv-sud-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/20210222-reisebericht-tuv-sud-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:02.653Z"
+  },
+  {
+    "document_id": "256594",
+    "title": "b-aw-vorhaben-4722i01510-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/b-aw-vorhaben-4722i01510-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:02.895Z"
+  },
+  {
+    "document_id": "256484",
+    "title": "zb-3622s62589-2024-q1-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/zb-3622s62589-2024-q1-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:06.134Z"
+  },
+  {
+    "document_id": "250266",
+    "title": "151020-optionspapier-nord-stream-opal-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/151020-optionspapier-nord-stream-opal-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:07.705Z"
+  },
+  {
+    "document_id": "250255",
+    "title": "151120-xx-deckvermerk-st-runde-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/151120-xx-deckvermerk-st-runde-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:08.122Z"
+  },
+  {
+    "document_id": "250263",
+    "title": "151023-nord-stream-laufende-umweltgesetzgebung-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/151023-nord-stream-laufende-umweltgesetzgebung-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:08.432Z"
+  },
+  {
+    "document_id": "250261",
+    "title": "151025-tb-99999-v05083-basfwintershall-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/151025-tb-99999-v05083-basfwintershall-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:08.775Z"
+  },
+  {
+    "document_id": "250260",
+    "title": "151026-nord-stream-wettbewerbsrechtliche-aspekte-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/151026-nord-stream-wettbewerbsrechtliche-aspekte-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:09.119Z"
+  },
+  {
+    "document_id": "250257",
+    "title": "151109-v-nordstream-ii-4-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/151109-v-nordstream-ii-4-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:09.529Z"
+  },
+  {
+    "document_id": "250248",
+    "title": "151209-xx-sprechzettel-energieunion-bmwi-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/151209-xx-sprechzettel-energieunion-bmwi-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:09.968Z"
+  },
+  {
+    "document_id": "250207",
+    "title": "anlage-2-beiladungsbeschluss-gtsou-0000-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/anlage-2-beiladungsbeschluss-gtsou-0000-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:10.328Z"
+  },
+  {
+    "document_id": "250209",
+    "title": "anlage-1b-vollmacht-wikborn-rein-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/anlage-1b-vollmacht-wikborn-rein-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:11.070Z"
+  },
+  {
+    "document_id": "250272",
+    "title": "150929-xx-opal-alii-2-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/150929-xx-opal-alii-2-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:11.720Z"
+  },
+  {
+    "document_id": "250208",
+    "title": "anlage-1b-vollmacht-wikborg-rein-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/anlage-1b-vollmacht-wikborg-rein-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:12.828Z"
+  },
+  {
+    "document_id": "256418",
+    "title": "betrachtung-von-lsst-u-a-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/betrachtung-von-lsst-u-a-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:16.385Z"
+  },
+  {
+    "document_id": "256337",
+    "title": "3621s62570-zustimmung-anderungsdienst-rev-1-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/3621s62570-zustimmung-anderungsdienst-rev-1-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:21.720Z"
+  },
+  {
+    "document_id": "256466",
+    "title": "teilnahmebericht-tuv-sud-seminar-2022120607-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/teilnahmebericht-tuv-sud-seminar-2022120607-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:32.354Z"
+  },
+  {
+    "document_id": "256549",
+    "title": "zb-3618s62571-2019-q1-20190411-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/zb-3618s62571-2019-q1-20190411-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:33.061Z"
+  },
+  {
+    "document_id": "256551",
+    "title": "zb-3618s62571-2019-q4-20200116-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/zb-3618s62571-2019-q4-20200116-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:33.395Z"
+  },
+  {
+    "document_id": "256552",
+    "title": "zb-3618s62571-2020-q2-20200706-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/zb-3618s62571-2020-q2-20200706-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:33.757Z"
+  },
+  {
+    "document_id": "256546",
+    "title": "vt-um19i01100-rev3-va4934-201112-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/vt-um19i01100-rev3-va4934-201112-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:34.159Z"
+  },
+  {
+    "document_id": "256603",
+    "title": "lb-mit-bmuv-anmerkungen-gesamt-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/lb-mit-bmuv-anmerkungen-gesamt-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:36.927Z"
+  },
+  {
+    "document_id": "256490",
+    "title": "20200716-antrag-ad-hoc-mittel-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/20200716-antrag-ad-hoc-mittel-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:37.591Z"
+  },
+  {
+    "document_id": "256472",
+    "title": "vermerk-fbgl-anderungsdienst-fv-3621s62570-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/vermerk-fbgl-anderungsdienst-fv-3621s62570-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:38.305Z"
+  },
+  {
+    "document_id": "256530",
+    "title": "entwurf-ad-im-vorhaben-3618s22365-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/entwurf-ad-im-vorhaben-3618s22365-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:38.400Z"
+  },
+  {
+    "document_id": "250253",
+    "title": "151202-xx-bm-vorlage-zeitplan-3-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/151202-xx-bm-vorlage-zeitplan-3-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:39.952Z"
+  },
+  {
+    "document_id": "250267",
+    "title": "151020-optionspapier-nord-stream-opal-2-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/151020-optionspapier-nord-stream-opal-2-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:40.066Z"
+  },
+  {
+    "document_id": "250212",
+    "title": "anlage-as-4-ns-2-ag-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/anlage-as-4-ns-2-ag-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:40.873Z"
+  },
+  {
+    "document_id": "250213",
+    "title": "anlage-as-3-ns-2-ag-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/anlage-as-3-ns-2-ag-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:41.264Z"
+  },
+  {
+    "document_id": "250282",
+    "title": "150307-grunen-autorenpapier-nord-stream-2-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/150307-grunen-autorenpapier-nord-stream-2-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:41.620Z"
+  },
+  {
+    "document_id": "250214",
+    "title": "anlage-as-2-ns-2-ag-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/anlage-as-2-ns-2-ag-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:42.022Z"
+  },
+  {
+    "document_id": "250275",
+    "title": "150915-xx-bm-homann-seele-nordstream-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/150915-xx-bm-homann-seele-nordstream-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:42.673Z"
+  },
+  {
+    "document_id": "250274",
+    "title": "150916-sprechzettel-aliii-erweiterung-nord-stream-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/150916-sprechzettel-aliii-erweiterung-nord-stream-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:43.377Z"
+  },
+  {
+    "document_id": "250277",
+    "title": "150908-xx-bm-homann-seele-nordstream-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/150908-xx-bm-homann-seele-nordstream-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:44.446Z"
+  },
+  {
+    "document_id": "250204",
+    "title": "anlage-2-naftogaz-ownership-policy-2020-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/anlage-2-naftogaz-ownership-policy-2020-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:46.234Z"
+  },
+  {
+    "document_id": "250205",
+    "title": "anlage-2-satzung-gtsou-plus-ubersetzung-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/anlage-2-satzung-gtsou-plus-ubersetzung-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:47.290Z"
+  },
+  {
+    "document_id": "256453",
+    "title": "sign-bf-aus-ad-um22i01100-231012-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/sign-bf-aus-ad-um22i01100-231012-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:49.375Z"
+  },
+  {
+    "document_id": "256416",
+    "title": "aw-20220207-3621s72360-ad-fachl-bewertung-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/aw-20220207-3621s72360-ad-fachl-bewertung-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:50.362Z"
+  },
+  {
+    "document_id": "256317",
+    "title": "20221012-si2-an-si5-wg-4722i01510-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/20221012-si2-an-si5-wg-4722i01510-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:56.064Z"
+  },
+  {
+    "document_id": "256277",
+    "title": "20200514-3618s22365-zb-1-quartal-2020-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/20200514-3618s22365-zb-1-quartal-2020-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:41:58.973Z"
+  },
+  {
+    "document_id": "256548",
+    "title": "wg-vorhaben-3621s72360-anderungsdienst-rev-2-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/wg-vorhaben-3621s72360-anderungsdienst-rev-2-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:02.598Z"
+  },
+  {
+    "document_id": "256515",
+    "title": "3618s62575-vorschlag-zusatzarbeiten-ap3-entwurf-200728-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/3618s62575-vorschlag-zusatzarbeiten-ap3-entwurf-200728-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:03.280Z"
+  },
+  {
+    "document_id": "256605",
+    "title": "reisebericht-iaea-cn-300-september-2022-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/reisebericht-iaea-cn-300-september-2022-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:06.694Z"
+  },
+  {
+    "document_id": "256526",
+    "title": "4-quartal-2023-stellungnahme-zb-3621s72360-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/4-quartal-2023-stellungnahme-zb-3621s72360-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:08.002Z"
+  },
+  {
+    "document_id": "250254",
+    "title": "151123-1506956-parlamentar-anfrage-betr-nordstream-2-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/151123-1506956-parlamentar-anfrage-betr-nordstream-2-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:08.830Z"
+  },
+  {
+    "document_id": "250279",
+    "title": "150702-xx-bm-miller-seele-nordstream-end-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/150702-xx-bm-miller-seele-nordstream-end-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:09.475Z"
+  },
+  {
+    "document_id": "250210",
+    "title": "anlage-1a-vollmacht-lsp-lindemann-schwennicke-partner-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/anlage-1a-vollmacht-lsp-lindemann-schwennicke-partner-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:09.572Z"
+  },
+  {
+    "document_id": "250276",
+    "title": "150915-xx-sprechzettel-aliii-erweiterung-nord-stream-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/150915-xx-sprechzettel-aliii-erweiterung-nord-stream-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:10.130Z"
+  },
+  {
+    "document_id": "250234",
+    "title": "20211102-iiia3-sst-bilat-merkel-dnk-iib4-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/20211102-iiia3-sst-bilat-merkel-dnk-iib4-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:10.392Z"
+  },
+  {
+    "document_id": "250245",
+    "title": "20190211-higru-north-stream-2-aktualisierung-2-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/20190211-higru-north-stream-2-aktualisierung-2-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:10.861Z"
+  },
+  {
+    "document_id": "250199",
+    "title": "anlage-4-beglaubigte-ubersetzung-rechtsgutachten-aequo-0000-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/anlage-4-beglaubigte-ubersetzung-rechtsgutachten-aequo-0000-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:11.146Z"
+  },
+  {
+    "document_id": "250200",
+    "title": "anlage-4-beglaubigte-ubersetzung-rechtsgutachten-aequo-2-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/anlage-4-beglaubigte-ubersetzung-rechtsgutachten-aequo-2-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:11.516Z"
+  },
+  {
+    "document_id": "250203",
+    "title": "anlage-3-beschluss-finanzministerium-plus-ubersetzung-2-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/anlage-3-beschluss-finanzministerium-plus-ubersetzung-2-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:12.195Z"
+  },
+  {
+    "document_id": "250206",
+    "title": "anlage-2-satzung-gtsou-plus-ubersetzung-2-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/anlage-2-satzung-gtsou-plus-ubersetzung-2-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:13.046Z"
+  },
+  {
+    "document_id": "250202",
+    "title": "anlage-3-beschluss-finanzministerium-plus-ubersetzung-0000-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/anlage-3-beschluss-finanzministerium-plus-ubersetzung-0000-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:14.068Z"
+  },
+  {
+    "document_id": "256465",
+    "title": "teilnahmebericht-tuv-sud-seminar-20201214-15-grs-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/teilnahmebericht-tuv-sud-seminar-20201214-15-grs-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:15.213Z"
+  },
+  {
+    "document_id": "256464",
+    "title": "teilnahmebericht-strahlenschutz-in-medizin-forschung-und-industrie-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/teilnahmebericht-strahlenschutz-in-medizin-forschung-und-industrie-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:17.680Z"
+  },
+  {
+    "document_id": "256457",
+    "title": "sign-bf-aus-vt-um22i01100-va5315-220701-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/sign-bf-aus-vt-um22i01100-va5315-220701-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:18.103Z"
+  },
+  {
+    "document_id": "256335",
+    "title": "2-20230912-3621s72360-anderung-reise-fachl-bewertung-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/2-20230912-3621s72360-anderung-reise-fachl-bewertung-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:21.111Z"
+  },
+  {
+    "document_id": "256359",
+    "title": "4853001-2021-0023-um19i0100-anderungsdienst-abstockung-pdf-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/4853001-2021-0023-um19i0100-anderungsdienst-abstockung-pdf-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:22.939Z"
+  },
+  {
+    "document_id": "256313",
+    "title": "20220928-si2-an-si5-wg-vorhaben-4722i01510-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/20220928-si2-an-si5-wg-vorhaben-4722i01510-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:24.147Z"
+  },
+  {
+    "document_id": "256410",
+    "title": "8-aw-fv-3621s72360-anderungsdienst-rev-3-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/8-aw-fv-3621s72360-anderungsdienst-rev-3-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:29.254Z"
+  },
+  {
+    "document_id": "256362",
+    "title": "4853001-2021-0023-um19i01100-vertrag-unterzeichnet-pdf-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/4853001-2021-0023-um19i01100-vertrag-unterzeichnet-pdf-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:32.321Z"
+  },
+  {
+    "document_id": "256543",
+    "title": "vermerk-zu-3621s62570-zustimmung-anderungsdienst-rev-1-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/vermerk-zu-3621s62570-zustimmung-anderungsdienst-rev-1-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:33.046Z"
+  },
+  {
+    "document_id": "256503",
+    "title": "20221011-base-z6-an-si2-aw-4722i01510-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/20221011-base-z6-an-si2-aw-4722i01510-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:35.653Z"
+  },
+  {
+    "document_id": "256496",
+    "title": "20220701-grs-gez-vtr-aw-beauftragung-um22i01100-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/20220701-grs-gez-vtr-aw-beauftragung-um22i01100-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:36.044Z"
+  },
+  {
+    "document_id": "250287",
+    "title": "16-06-07-deckvermerk-st-runde-nord-stream-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/16-06-07-deckvermerk-st-runde-nord-stream-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:38.728Z"
+  },
+  {
+    "document_id": "250223",
+    "title": "anl-7-2-deu-br-subsidiaritatsruge-mdi-vo-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/anl-7-2-deu-br-subsidiaritatsruge-mdi-vo-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:38.939Z"
+  },
+  {
+    "document_id": "250226",
+    "title": "anl-6-1-deu-bot-riga-ltv-gasmarkt-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/anl-6-1-deu-bot-riga-ltv-gasmarkt-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:39.464Z"
+  },
+  {
+    "document_id": "250237",
+    "title": "20210721-xx-weisung-astv-energie-energy-charta-geschwarzt-vc3",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/20210721-xx-weisung-astv-energie-energy-charta-geschwarzt-vc3.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:39.685Z"
+  },
+  {
+    "document_id": "250238",
+    "title": "20210721-xx-weisung-astv-energie-energy-charta-geschwarzt-1",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/20210721-xx-weisung-astv-energie-energy-charta-geschwarzt-1.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:40.162Z"
+  },
+  {
+    "document_id": "250268",
+    "title": "151020-optionspapier-nord-stream-opal-ohne-erganzungen-iia3-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/151020-optionspapier-nord-stream-opal-ohne-erganzungen-iia3-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:40.411Z"
+  },
+  {
+    "document_id": "250291",
+    "title": "16-01-06-deckvermerk-st-runde-12-01-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/16-01-06-deckvermerk-st-runde-12-01-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:40.814Z"
+  },
+  {
+    "document_id": "256461",
+    "title": "strahlenschutz-in-medizin-forschung-und-industrie-2020-tagungsprogramm-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/strahlenschutz-in-medizin-forschung-und-industrie-2020-tagungsprogramm-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:41.459Z"
+  },
+  {
+    "document_id": "256420",
+    "title": "bf-aus-ad-3618s22365-rev2-va4822-agk-190219-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/bf-aus-ad-3618s22365-rev2-va4822-agk-190219-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:42.197Z"
+  },
+  {
+    "document_id": "256375",
+    "title": "4853003-2021-0051-20190917-fachlicher-vergabevermerk-3619s72273-pdf-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/4853003-2021-0051-20190917-fachlicher-vergabevermerk-3619s72273-pdf-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:43.029Z"
+  },
+  {
+    "document_id": "256305",
+    "title": "20220406-si5-an-si2-wg-vorhaben-4722i01510-e-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/20220406-si5-an-si2-wg-vorhaben-4722i01510-e-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:45.969Z"
+  },
+  {
+    "document_id": "256309",
+    "title": "20220510-base-an-si2-si5-vtr-vorhaben-4722i01510-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/20220510-base-an-si2-si5-vtr-vorhaben-4722i01510-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:46.666Z"
+  },
+  {
+    "document_id": "256314",
+    "title": "20221011-base-z6-an-si2-aw-4722i01510-geschwarzt-1",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/20221011-base-z6-an-si2-aw-4722i01510-geschwarzt-1.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:46.797Z"
+  },
+  {
+    "document_id": "256315",
+    "title": "20221125-an-bfs-s-i-2-4853003-3622s62589-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/20221125-an-bfs-s-i-2-4853003-3622s62589-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:47.321Z"
+  },
+  {
+    "document_id": "256318",
+    "title": "20221013-an-base-s-i-2-1032004-4722i01510-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/20221013-an-base-s-i-2-1032004-4722i01510-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:49.698Z"
+  },
+  {
+    "document_id": "256254",
+    "title": "20190523-scan-vor-absendung-um19i01100-anschr-grs-aa-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/20190523-scan-vor-absendung-um19i01100-anschr-grs-aa-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:49.802Z"
+  },
+  {
+    "document_id": "256408",
+    "title": "7-wg-aw-fv-3621s72360-anderungsdienst-rev-3-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/7-wg-aw-fv-3621s72360-anderungsdienst-rev-3-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:51.726Z"
+  },
+  {
+    "document_id": "256396",
+    "title": "4853003-2021-0052-20210430-fachlicher-vergabevermerk-3621s62280-pdf-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/4853003-2021-0052-20210430-fachlicher-vergabevermerk-3621s62280-pdf-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:52.565Z"
+  },
+  {
+    "document_id": "256364",
+    "title": "4853001-2021-0023-zwischenbericht-2-quartal-2020-pdf-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/4853001-2021-0023-zwischenbericht-2-quartal-2020-pdf-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:42:55.960Z"
+  },
+  {
+    "document_id": "250215",
+    "title": "anlage-as-2-ns-2-ag-nichtvertraulich-teil-2-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/anlage-as-2-ns-2-ag-nichtvertraulich-teil-2-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:43:02.818Z"
+  },
+  {
+    "document_id": "250216",
+    "title": "anlage-as-2-ns-2-ag-nichtvertraulich-teil-1-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/anlage-as-2-ns-2-ag-nichtvertraulich-teil-1-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:43:02.923Z"
+  },
+  {
+    "document_id": "250198",
+    "title": "anlage-lv-160621-final-joint-declaration-4-draft-fin-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/anlage-lv-160621-final-joint-declaration-4-draft-fin-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:43:03.577Z"
+  },
+  {
+    "document_id": "256456",
+    "title": "sign-bf-aus-vt-um19i01100-rev4-va4934-211208-e-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/sign-bf-aus-vt-um19i01100-rev4-va4934-211208-e-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:43:05.023Z"
+  },
+  {
+    "document_id": "256459",
+    "title": "sign-bf-ein-advt-um19i01100-rev4-va4934-211208-e-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/sign-bf-ein-advt-um19i01100-rev4-va4934-211208-e-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:43:05.126Z"
+  },
+  {
+    "document_id": "256455",
+    "title": "sign-bf-aus-anderungsvertrag-ad-rev1-um22i01100-va5315-221111-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/sign-bf-aus-anderungsvertrag-ad-rev1-um22i01100-va5315-221111-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:43:05.934Z"
+  },
+  {
+    "document_id": "256306",
+    "title": "20220510-base-an-si2-si5-vtr-vorhaben-4722i01510-geschwarzt-1",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/20220510-base-an-si2-si5-vtr-vorhaben-4722i01510-geschwarzt-1.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:43:07.013Z"
+  },
+  {
+    "document_id": "256319",
+    "title": "20221125-an-bfs-zugestellt-s-i-2-4853003-3622s62589-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/20221125-an-bfs-zugestellt-s-i-2-4853003-3622s62589-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:43:07.263Z"
+  },
+  {
+    "document_id": "256631",
+    "title": "20210927-3618s22365-schlussbericht-gemass-ss12-3-abfe-bmu-210924-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/20210927-3618s22365-schlussbericht-gemass-ss12-3-abfe-bmu-210924-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:43:12.726Z"
+  },
+  {
+    "document_id": "256504",
+    "title": "20221013-an-base-zugestellt-s-i-2-1032004-4722i01510-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/20221013-an-base-zugestellt-s-i-2-1032004-4722i01510-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:43:14.293Z"
+  },
+  {
+    "document_id": "250288",
+    "title": "16-05-09-stm-gesprach-mit-martin-selmayr-nord-stream-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/16-05-09-stm-gesprach-mit-martin-selmayr-nord-stream-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:43:16.681Z"
+  },
+  {
+    "document_id": "250217",
+    "title": "anlage-as-2-ns-2-ag-nichtvertraulich-teil-1-2-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/anlage-as-2-ns-2-ag-nichtvertraulich-teil-1-2-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:43:16.935Z"
+  },
+  {
+    "document_id": "250224",
+    "title": "anl-7-1-deu-bt-subsidiarity-decision-acer-mdi-reg-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/anl-7-1-deu-bt-subsidiarity-decision-acer-mdi-reg-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:43:17.467Z"
+  },
+  {
+    "document_id": "250225",
+    "title": "anl-6-3-deu-bot-riga-ltv-gasmarkt-anl-2-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/anl-6-3-deu-bot-riga-ltv-gasmarkt-anl-2-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:43:17.577Z"
+  },
+  {
+    "document_id": "250271",
+    "title": "151006-bm-gesprach-mit-sefcovic-zur-geplanten-erweiterung-der-nord-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/151006-bm-gesprach-mit-sefcovic-zur-geplanten-erweiterung-der-nord-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:43:18.255Z"
+  },
+  {
+    "document_id": "250201",
+    "title": "anlage-3-cert-de-2021-10-14-aequo-legal-opinion-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/anlage-3-cert-de-2021-10-14-aequo-legal-opinion-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:43:18.355Z"
+  },
+  {
+    "document_id": "256462",
+    "title": "teilnahme-12-2022-strahlenschutz-in-medizin-forschung-und-industrie-2022-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/teilnahme-12-2022-strahlenschutz-in-medizin-forschung-und-industrie-2022-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:43:19.175Z"
+  },
+  {
+    "document_id": "256385",
+    "title": "4853003-2021-0051-bf-aus-3619s72273-va4954-antrag-mittelfreigabe-210913-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/4853003-2021-0051-bf-aus-3619s72273-va4954-antrag-mittelfreigabe-210913-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:43:19.831Z"
+  },
+  {
+    "document_id": "256634",
+    "title": "20211208-si2-an-grs-aw-um19i01100-anderungsdienst-rev-4-e-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/20211208-si2-an-grs-aw-um19i01100-anderungsdienst-rev-4-e-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:43:24.689Z"
+  },
+  {
+    "document_id": "256627",
+    "title": "20210315-an-bfs-s-i-2-4840002-2021-0012-3621s72360-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/20210315-an-bfs-s-i-2-4840002-2021-0012-3621s72360-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:43:25.345Z"
+  },
+  {
+    "document_id": "250270",
+    "title": "151007-v4-statement-on-ukraine-und-argumentaire-aa-trilateral-talks-eurussiaukraine-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/151007-v4-statement-on-ukraine-und-argumentaire-aa-trilateral-talks-eurussiaukraine-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:43:27.167Z"
+  },
+  {
+    "document_id": "250290",
+    "title": "16-01-06-deckvermerk-st-runde-12-01-nord-stream-2-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/16-01-06-deckvermerk-st-runde-12-01-nord-stream-2-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:43:27.505Z"
+  },
+  {
+    "document_id": "250289",
+    "title": "16-03-23-deckvermerk-st-runde-iia4-sos-vo-nord-stream-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/16-03-23-deckvermerk-st-runde-iia4-sos-vo-nord-stream-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:43:27.929Z"
+  },
+  {
+    "document_id": "256569",
+    "title": "20201112-grs-an-si2-aw-um19i01100-ad-rev-3-gez-ad-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/20201112-grs-an-si2-aw-um19i01100-ad-rev-3-gez-ad-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:43:31.251Z"
+  },
+  {
+    "document_id": "250278",
+    "title": "150731-basf-und-gazprom-unterzeichnen-absichtserklarung-zum-ausbau-der-nord-stream-pipeline-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/150731-basf-und-gazprom-unterzeichnen-absichtserklarung-zum-ausbau-der-nord-stream-pipeline-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:43:32.727Z"
+  },
+  {
+    "document_id": "256377",
+    "title": "4853003-2021-0051-3619s72273-bfs-schr-zustimmung-mittelfreigabe-er-2021-gez-pdf-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/4853003-2021-0051-3619s72273-bfs-schr-zustimmung-mittelfreigabe-er-2021-gez-pdf-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:43:32.950Z"
+  },
+  {
+    "document_id": "256400",
+    "title": "4853003-2021-0052-abschl-fachl-stn-zu-vorhaben-mit-bmu-fachbegleit-docx-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/4853003-2021-0052-abschl-fachl-stn-zu-vorhaben-mit-bmu-fachbegleit-docx-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:43:34.330Z"
+  },
+  {
+    "document_id": "250235",
+    "title": "20211102-iiia3-gu-turbo-bk-in-merkel-mit-dnk-11-10-2021-iib4-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/20211102-iiia3-gu-turbo-bk-in-merkel-mit-dnk-11-10-2021-iib4-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:43:35.031Z"
+  },
+  {
+    "document_id": "250220",
+    "title": "anlage3-the-u-s-should-press-germany-harder-on-nord-stream-2-bloomberg-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/anlage3-the-u-s-should-press-germany-harder-on-nord-stream-2-bloomberg-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:43:35.175Z"
+  },
+  {
+    "document_id": "250244",
+    "title": "20190911-xx-xx-al-pol-2-us-deu-strategischer-dialog-ukr-ns2-gastransit-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/20190911-xx-xx-al-pol-2-us-deu-strategischer-dialog-ukr-ns2-gastransit-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:43:35.777Z"
+  },
+  {
+    "document_id": "256301",
+    "title": "20220404-an-si5-zk-wg-s-i-2-1032004-2022-0001-4722i01510-e-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/20220404-an-si5-zk-wg-s-i-2-1032004-2022-0001-4722i01510-e-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:43:38.082Z"
+  },
+  {
+    "document_id": "256391",
+    "title": "4853003-2021-0051-wg-auftrag-im-3619s72273-stellungnahme-grundsatzpapier-icrp-zur-uberarbeitung-ic-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/945314/4853003-2021-0051-wg-auftrag-im-3619s72273-stellungnahme-grundsatzpapier-icrp-zur-uberarbeitung-ic-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:43:38.730Z"
+  },
+  {
+    "document_id": "250283",
+    "title": "140630-xx-berichte-teil-1-und-2-al-ii-fur-iea-termin-1-7-2014-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/140630-xx-berichte-teil-1-und-2-al-ii-fur-iea-termin-1-7-2014-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:43:38.957Z"
+  },
+  {
+    "document_id": "250273",
+    "title": "150916-xx-aw-bilaterale-gesprache-am-rande-des-informellen-energierates-am-23-9-2015-in-lux-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/150916-xx-aw-bilaterale-gesprache-am-rande-des-informellen-energierates-am-23-9-2015-in-lux-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:43:40.275Z"
+  },
+  {
+    "document_id": "250221",
+    "title": "anlage2-ted-cruz-delays-burns-s-cia-confirmation-to-demand-biden-action-on-nord-stream-2-bloomberg-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/anlage2-ted-cruz-delays-burns-s-cia-confirmation-to-demand-biden-action-on-nord-stream-2-bloomberg-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:43:41.568Z"
+  },
+  {
+    "document_id": "250241",
+    "title": "20210520-wash-nord-stream-2-administration-kommt-deu-entgegen-und-nimmt-konfrontation-mit-us-kongress-in-kauf-xxxxx-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/20210520-wash-nord-stream-2-administration-kommt-deu-entgegen-und-nimmt-konfrontation-mit-us-kongress-in-kauf-xxxxx-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:43:41.848Z"
+  },
+  {
+    "document_id": "250240",
+    "title": "20210520-xx-wash-nord-stream-2-administration-kommt-deu-entgegen-und-nimmt-konfrontation-mit-us-kongress-in-kauf-xxxxx-geschwarzt",
+    "file_url": "https://media.frag-den-staat.de/files/foi/924732/20210520-xx-wash-nord-stream-2-administration-kommt-deu-entgegen-und-nimmt-konfrontation-mit-us-kongress-in-kauf-xxxxx-geschwarzt.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:43:42.206Z"
+  },
+  {
+    "document_id": "256144",
+    "title": "Urteil des Verwaltungsgerichts Berlin zum Beraterbericht 2019",
+    "file_url": "https://media.frag-den-staat.de/files/foi/976472/2024-10-09-vg-urteil-schw.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:45:08.520Z"
+  }
+]
