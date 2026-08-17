@@ -8,6 +8,8 @@ start to collect ~3k redacted pdf links from fragDenStaat (14.08.2026)
 node discovery.js
 ```
 
+Discovery-Ergebnisse und Kandidatenlisten werden unter `output/discovery/` gespeichert.
+
 # Step 2 - download
 
 ```bash

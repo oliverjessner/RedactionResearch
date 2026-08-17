@@ -4,10 +4,11 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 
 const OUTPUT_DIR = path.join(__dirname, 'output');
+const DISCOVERY_DIR = path.join(OUTPUT_DIR, 'discovery');
 const DOWNLOAD_DIR = path.join(OUTPUT_DIR, 'download');
 const PDF_DIR = path.join(DOWNLOAD_DIR, 'pdfs');
 
-const CANDIDATES_FILE = path.join(OUTPUT_DIR, 'candidates.json');
+const CANDIDATES_FILE = path.join(DISCOVERY_DIR, 'candidates.json');
 
 const RESULTS_FILE = path.join(DOWNLOAD_DIR, 'download-results.json');
 

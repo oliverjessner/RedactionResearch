@@ -9,11 +9,12 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const OUTPUT_DIR = path.join(__dirname, 'output');
+const DISCOVERY_DIR = path.join(OUTPUT_DIR, 'discovery');
 const DOWNLOAD_DIR = path.join(OUTPUT_DIR, 'download');
 const PDF_DIR = path.join(DOWNLOAD_DIR, 'pdfs');
 const FORENSIC_DIR = path.join(OUTPUT_DIR, 'forensic');
 
-const CANDIDATES_FILE = path.join(OUTPUT_DIR, 'candidates.json');
+const CANDIDATES_FILE = path.join(DISCOVERY_DIR, 'candidates.json');
 
 const PROBLEMS_FILE = path.join(FORENSIC_DIR, 'redaction_problems.json');
 

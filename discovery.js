@@ -1,15 +1,16 @@
-import fs from 'node:fs/promises';
+const fs = require('node:fs/promises');
+const path = require('node:path');
 
 const BASE = 'https://fragdenstaat.de';
 
 const TARGET = Number(process.env.TARGET ?? 5000);
 const REQUEST_DELAY_MS = Number(process.env.DELAY ?? 300);
 
-const OUTPUT_DIR = 'output';
+const OUTPUT_DIR = path.join(__dirname, 'output', 'discovery');
 
-const OUTPUT_JSON = `${OUTPUT_DIR}/candidates.json`;
-const OUTPUT_CSV = `${OUTPUT_DIR}/candidates.csv`;
-const OUTPUT_DISCOVERY_JSON = `${OUTPUT_DIR}/discovery.json`;
+const OUTPUT_JSON = path.join(OUTPUT_DIR, 'candidates.json');
+const OUTPUT_CSV = path.join(OUTPUT_DIR, 'candidates.csv');
+const OUTPUT_DISCOVERY_JSON = path.join(OUTPUT_DIR, 'discovery.json');
 
 const SEARCH_TERMS = [
     'geschwärzt',

@@ -1,1 +1,491 @@
-[]
+[
+  {
+    "file": "312.pdf",
+    "document_id": "312",
+    "title": "kba-klage-erwiderung_geschwaerzt.pdf",
+    "source_url": "https://fragdenstaat.de/dokumente/312/",
+    "file_url": "https://media.frag-den-staat.de/files/foi/387550/kba-klage-erwiderung_geschwaerzt.pdf",
+    "page_count": 8,
+    "highest_risk_score": 94,
+    "problem_count": 4,
+    "problems": [
+      {
+        "type": "DARK_PAGE_CONTENT_HIDES_LIVE_TEXT",
+        "risk_score": 94,
+        "page": 1,
+        "evidence": {
+          "affected_text_items": 10,
+          "regions": [
+            [
+              553.5,
+              285.75,
+              706.5,
+              312.75
+            ],
+            [
+              596.25,
+              230.63,
+              695.25,
+              277.88
+            ],
+            [
+              553.5,
+              268.88,
+              587.25,
+              277.88
+            ],
+            [
+              553.5,
+              252,
+              587.25,
+              261
+            ],
+            [
+              554.63,
+              230.63,
+              585,
+              244.13
+            ]
+          ]
+        },
+        "severity": "critical"
+      },
+      {
+        "type": "DARK_PAGE_CONTENT_HIDES_LIVE_TEXT",
+        "risk_score": 94,
+        "page": 2,
+        "evidence": {
+          "affected_text_items": 4,
+          "regions": [
+            [
+              103.5,
+              675.75,
+              182.25,
+              690.75
+            ],
+            [
+              102.38,
+              732,
+              214.88,
+              747
+            ],
+            [
+              150.75,
+              637.5,
+              207,
+              652.5
+            ],
+            [
+              103.5,
+              637.5,
+              137.25,
+              652.5
+            ]
+          ]
+        },
+        "severity": "critical"
+      },
+      {
+        "type": "DARK_PAGE_CONTENT_HIDES_LIVE_TEXT",
+        "risk_score": 94,
+        "page": 3,
+        "evidence": {
+          "affected_text_items": 9,
+          "regions": [
+            [
+              669.39,
+              319.88,
+              705.39,
+              331.88
+            ],
+            [
+              558.01,
+              319.88,
+              648.01,
+              331.88
+            ],
+            [
+              558.01,
+              304.88,
+              585.01,
+              313.88
+            ],
+            [
+              666.01,
+              285,
+              711.01,
+              297
+            ],
+            [
+              558.01,
+              289.13,
+              591.76,
+              298.13
+            ],
+            [
+              667.14,
+              267,
+              712.14,
+              279
+            ],
+            [
+              558.01,
+              270,
+              591.76,
+              279
+            ],
+            [
+              594.01,
+              247.88,
+              639.01,
+              259.88
+            ],
+            [
+              559.13,
+              247.88,
+              586.13,
+              259.88
+            ]
+          ]
+        },
+        "severity": "critical"
+      },
+      {
+        "type": "DARK_PAGE_CONTENT_HIDES_LIVE_TEXT",
+        "risk_score": 88,
+        "page": 8,
+        "evidence": {
+          "affected_text_items": 1,
+          "regions": [
+            [
+              117,
+              918.75,
+              211.5,
+              933.75
+            ]
+          ]
+        },
+        "severity": "high"
+      }
+    ],
+    "supporting_signals": [],
+    "scanned_at": "2026-08-17T14:09:19.139Z",
+    "note": "No hidden/redacted text content is stored in this output; only detection metadata."
+  },
+  {
+    "file": "493.pdf",
+    "document_id": "493",
+    "title": "Antwort Kontrollbericht zu McDonald's, Bottrop - geschwärzt",
+    "source_url": "https://fragdenstaat.de/dokumente/493-antwort-kontrollbericht-zu-mcdonalds-bottrop-geschwarzt/",
+    "file_url": "https://media.frag-den-staat.de/files/foi/396146/img004_geschwaerzt.pdf",
+    "page_count": 1,
+    "highest_risk_score": 94,
+    "problem_count": 2,
+    "problems": [
+      {
+        "type": "DARK_PAGE_CONTENT_HIDES_LIVE_TEXT",
+        "risk_score": 94,
+        "page": 1,
+        "evidence": {
+          "affected_text_items": 31,
+          "regions": [
+            [
+              686.25,
+              960.75,
+              781.88,
+              969.75
+            ],
+            [
+              686.25,
+              926.25,
+              865.13,
+              950.63
+            ],
+            [
+              686.25,
+              906,
+              811.13,
+              918
+            ],
+            [
+              684,
+              869.63,
+              762.75,
+              878.63
+            ],
+            [
+              685.13,
+              840.75,
+              866.25,
+              859.5
+            ],
+            [
+              685.13,
+              803.25,
+              780.75,
+              812.25
+            ],
+            [
+              685.12,
+              774.38,
+              871.88,
+              792
+            ],
+            [
+              685.12,
+              368.25,
+              797.62,
+              397.13
+            ],
+            [
+              686.25,
+              333.38,
+              757.13,
+              345.38
+            ],
+            [
+              686.25,
+              264.75,
+              783,
+              310.5
+            ],
+            [
+              686.25,
+              195,
+              784.12,
+              207
+            ]
+          ]
+        },
+        "severity": "critical"
+      },
+      {
+        "type": "LIVE_TEXT_NOT_VISIBLE_ON_WHITE_REGION",
+        "risk_score": 82,
+        "page": 1,
+        "evidence": {
+          "affected_text_items": 35,
+          "regions": [
+            [
+              145.12,
+              832.88,
+              321.75,
+              867.38
+            ],
+            [
+              426.37,
+              709.13,
+              687.37,
+              725.63
+            ],
+            [
+              385.87,
+              709.13,
+              416.25,
+              725.63
+            ],
+            [
+              252,
+              622.5,
+              598.5,
+              655.88
+            ],
+            [
+              194.62,
+              639.38,
+              241.87,
+              655.88
+            ],
+            [
+              608.62,
+              622.5,
+              639,
+              639
+            ],
+            [
+              272.25,
+              588.75,
+              362.25,
+              605.25
+            ],
+            [
+              144,
+              588.75,
+              262.12,
+              605.25
+            ],
+            [
+              144,
+              231,
+              261,
+              264.38
+            ],
+            [
+              362.25,
+              203.63,
+              435.38,
+              212.63
+            ],
+            [
+              268.88,
+              203.63,
+              313.88,
+              212.63
+            ],
+            [
+              229.5,
+              203.63,
+              252,
+              212.63
+            ],
+            [
+              144,
+              203.63,
+              222.75,
+              212.63
+            ]
+          ]
+        },
+        "severity": "high"
+      }
+    ],
+    "supporting_signals": [],
+    "scanned_at": "2026-08-17T14:09:22.377Z",
+    "note": "No hidden/redacted text content is stored in this output; only detection metadata."
+  },
+  {
+    "file": "535.pdf",
+    "document_id": "535",
+    "title": "5050012-kj-26_19_geschwaerzt.pdf",
+    "source_url": "https://fragdenstaat.de/dokumente/535-5050012-kj-26_19_geschwaerztpdf/",
+    "file_url": "https://media.frag-den-staat.de/files/foi/396860/5050012-kj-26_19_geschwaerzt.pdf",
+    "page_count": 5,
+    "highest_risk_score": 94,
+    "problem_count": 3,
+    "problems": [
+      {
+        "type": "DARK_PAGE_CONTENT_HIDES_LIVE_TEXT",
+        "risk_score": 94,
+        "page": 1,
+        "evidence": {
+          "affected_text_items": 8,
+          "regions": [
+            [
+              622.13,
+              379.5,
+              648,
+              391.5
+            ],
+            [
+              623.25,
+              359.25,
+              702,
+              371.25
+            ],
+            [
+              142.88,
+              298.5,
+              182.25,
+              310.5
+            ],
+            [
+              94.5,
+              298.5,
+              132.75,
+              310.5
+            ],
+            [
+              119.05,
+              283.5,
+              148.5,
+              292.5
+            ],
+            [
+              95.63,
+              241.13,
+              231.75,
+              275.63
+            ]
+          ]
+        },
+        "severity": "critical"
+      },
+      {
+        "type": "DARK_PAGE_CONTENT_HIDES_LIVE_TEXT",
+        "risk_score": 94,
+        "page": 2,
+        "evidence": {
+          "affected_text_items": 4,
+          "regions": [
+            [
+              85.5,
+              597.37,
+              176.63,
+              630
+            ]
+          ]
+        },
+        "severity": "critical"
+      },
+      {
+        "type": "DARK_PAGE_CONTENT_HIDES_LIVE_TEXT",
+        "risk_score": 94,
+        "page": 3,
+        "evidence": {
+          "affected_text_items": 15,
+          "regions": [
+            [
+              214.88,
+              399.38,
+              459,
+              470.25
+            ]
+          ]
+        },
+        "severity": "critical"
+      }
+    ],
+    "supporting_signals": [],
+    "scanned_at": "2026-08-17T14:09:30.233Z",
+    "note": "No hidden/redacted text content is stored in this output; only detection metadata."
+  },
+  {
+    "file": "59.pdf",
+    "document_id": "59",
+    "title": "dok.pdf",
+    "source_url": "https://fragdenstaat.de/dokumente/59/",
+    "file_url": "https://media.frag-den-staat.de/files/foi/108890/dok.pdf",
+    "page_count": 10,
+    "highest_risk_score": 72,
+    "problem_count": 1,
+    "problems": [
+      {
+        "type": "LIVE_TEXT_NOT_VISIBLE_ON_WHITE_REGION",
+        "risk_score": 72,
+        "page": 1,
+        "evidence": {
+          "affected_text_items": 1,
+          "regions": [
+            [
+              106.24,
+              150.15,
+              781.28,
+              165.09
+            ]
+          ]
+        },
+        "severity": "medium"
+      }
+    ],
+    "supporting_signals": [
+      {
+        "type": "INCREMENTAL_PDF_REVISIONS_PRESENT",
+        "eof_markers": 2,
+        "prev_entries": 1,
+        "digital_signatures": 0
+      }
+    ],
+    "scanned_at": "2026-08-17T14:08:51.030Z",
+    "note": "No hidden/redacted text content is stored in this output; only detection metadata."
+  }
+]
