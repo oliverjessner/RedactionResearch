@@ -1300,5 +1300,47 @@
     "file_url": "https://media.frag-den-staat.de/files/foi/976472/2024-10-09-vg-urteil-schw.pdf",
     "error": "Response is not a valid PDF (content-type: text/html)",
     "failed_at": "2026-08-15T11:45:08.520Z"
+  },
+  {
+    "document_id": "3144",
+    "title": "img_20191025_0001.pdf",
+    "file_url": "https://media.frag-den-staat.de/files/foi/431602/img_20191025_0001.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:49:12.878Z"
+  },
+  {
+    "document_id": "2809",
+    "title": "img_20191025_0001.pdf",
+    "file_url": "https://media.frag-den-staat.de/files/foi/431602/img_20191025_0001.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:49:14.018Z"
+  },
+  {
+    "document_id": "244047",
+    "title": "econceptvetragsbedingungen",
+    "file_url": "https://media.frag-den-staat.de/files/foi/853229/econceptvetragsbedingungen.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:49:14.895Z"
+  },
+  {
+    "document_id": "625",
+    "title": "landrat-da-di-brief20190722.pdf",
+    "file_url": "https://media.frag-den-staat.de/files/foi/398436/landrat-da-di-brief20190722.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:51:47.226Z"
+  },
+  {
+    "document_id": "624",
+    "title": "landrat-da-di-brief-120190722.pdf",
+    "file_url": "https://media.frag-den-staat.de/files/foi/398436/landrat-da-di-brief-120190722.pdf",
+    "error": "Response is not a valid PDF (content-type: text/html)",
+    "failed_at": "2026-08-15T11:52:28.633Z"
+  },
+  {
+    "document_id": "236218",
+    "title": "bka-planungspapier-entschwaerzt",
+    "file_url": null,
+    "error": "Candidate has no file_url",
+    "failed_at": "2026-08-15T11:52:34.342Z"
   }
 ]

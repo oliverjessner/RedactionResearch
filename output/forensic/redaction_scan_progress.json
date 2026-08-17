@@ -1,0 +1,126 @@
+{
+  "completed": {
+    "33.pdf": "2026-08-17T13:27:04.346Z",
+    "42.pdf": "2026-08-17T13:27:12.114Z",
+    "39.pdf": "2026-08-17T13:27:16.047Z"
+  },
+  "errors": {
+    "38.pdf": {
+      "error": "pdfDocument.destroy is not a function",
+      "at": "2026-08-17T13:23:11.608Z"
+    },
+    "43.pdf": {
+      "error": "pdfDocument.destroy is not a function",
+      "at": "2026-08-17T13:23:13.360Z"
+    },
+    "44.pdf": {
+      "error": "pdfDocument.destroy is not a function",
+      "at": "2026-08-17T13:23:13.513Z"
+    },
+    "51.pdf": {
+      "error": "pdfDocument.destroy is not a function",
+      "at": "2026-08-17T13:23:15.013Z"
+    },
+    "56.pdf": {
+      "error": "pdfDocument.destroy is not a function",
+      "at": "2026-08-17T13:23:27.324Z"
+    },
+    "57.pdf": {
+      "error": "pdfDocument.destroy is not a function",
+      "at": "2026-08-17T13:23:27.431Z"
+    },
+    "59.pdf": {
+      "error": "pdfDocument.destroy is not a function",
+      "at": "2026-08-17T13:23:27.710Z"
+    },
+    "63.pdf": {
+      "error": "pdfDocument.destroy is not a function",
+      "at": "2026-08-17T13:23:29.518Z"
+    },
+    "77.pdf": {
+      "error": "pdfDocument.destroy is not a function",
+      "at": "2026-08-17T13:23:29.623Z"
+    },
+    "78.pdf": {
+      "error": "pdfDocument.destroy is not a function",
+      "at": "2026-08-17T13:23:29.631Z"
+    },
+    "87.pdf": {
+      "error": "pdfDocument.destroy is not a function",
+      "at": "2026-08-17T13:23:29.856Z"
+    },
+    "96.pdf": {
+      "error": "pdfDocument.destroy is not a function",
+      "at": "2026-08-17T13:23:30.470Z"
+    },
+    "97.pdf": {
+      "error": "pdfDocument.destroy is not a function",
+      "at": "2026-08-17T13:23:30.769Z"
+    },
+    "100.pdf": {
+      "error": "pdfDocument.destroy is not a function",
+      "at": "2026-08-17T13:23:41.258Z"
+    },
+    "110.pdf": {
+      "error": "pdfDocument.destroy is not a function",
+      "at": "2026-08-17T13:23:42.994Z"
+    },
+    "312.pdf": {
+      "error": "pdfDocument.destroy is not a function",
+      "at": "2026-08-17T13:23:53.288Z"
+    },
+    "315.pdf": {
+      "error": "pdfDocument.destroy is not a function",
+      "at": "2026-08-17T13:23:53.310Z"
+    },
+    "316.pdf": {
+      "error": "pdfDocument.destroy is not a function",
+      "at": "2026-08-17T13:23:53.316Z"
+    },
+    "317.pdf": {
+      "error": "pdfDocument.destroy is not a function",
+      "at": "2026-08-17T13:23:53.321Z"
+    },
+    "318.pdf": {
+      "error": "pdfDocument.destroy is not a function",
+      "at": "2026-08-17T13:23:53.326Z"
+    },
+    "319.pdf": {
+      "error": "pdfDocument.destroy is not a function",
+      "at": "2026-08-17T13:23:53.336Z"
+    },
+    "325.pdf": {
+      "error": "pdfDocument.destroy is not a function",
+      "at": "2026-08-17T13:23:53.662Z"
+    },
+    "327.pdf": {
+      "error": "pdfDocument.destroy is not a function",
+      "at": "2026-08-17T13:23:53.670Z"
+    },
+    "331.pdf": {
+      "error": "pdfDocument.destroy is not a function",
+      "at": "2026-08-17T13:23:53.683Z"
+    },
+    "474.pdf": {
+      "error": "pdfDocument.destroy is not a function",
+      "at": "2026-08-17T13:23:53.686Z"
+    },
+    "475.pdf": {
+      "error": "pdfDocument.destroy is not a function",
+      "at": "2026-08-17T13:23:53.693Z"
+    },
+    "493.pdf": {
+      "error": "pdfDocument.destroy is not a function",
+      "at": "2026-08-17T13:23:56.253Z"
+    },
+    "535.pdf": {
+      "error": "pdfDocument.destroy is not a function",
+      "at": "2026-08-17T13:24:04.147Z"
+    }
+  },
+  "updated_at": "2026-08-17T13:27:16.048Z",
+  "selected": 1,
+  "processed_this_run": 1,
+  "skipped_this_run": 0,
+  "problem_documents_total": 0
+}

@@ -14,11 +14,15 @@ node discovery.js
 node download.js
 ```
 
+Downloads, Download-Ergebnisse und Download-Fortschritt werden unter `output/download/` gespeichert.
+
 # Step 3 - detect
 
 ```bash
-node detect.js
+node forensic.mjs
 ```
+
+Forensische Ergebnisse und Scan-Fortschritt werden unter `output/forensic/` gespeichert.
 
 # Step 4 - double check with human
 

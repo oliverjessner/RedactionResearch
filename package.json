@@ -1,0 +1,24 @@
+{
+  "name": "redactionresearch",
+  "version": "0.0.1",
+  "description": "start to collect ~3k redacted pdf links from fragDenStaat (14.08.2026)",
+  "homepage": "https://github.com/oliverjessner/RedactionResearch#readme",
+  "bugs": {
+    "url": "https://github.com/oliverjessner/RedactionResearch/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oliverjessner/RedactionResearch.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "discovery.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "^1.0.6",
+    "pdfjs-dist": "^6.2.108"
+  }
+}

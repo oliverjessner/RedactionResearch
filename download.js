@@ -4,15 +4,16 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 
 const OUTPUT_DIR = path.join(__dirname, 'output');
-const PDF_DIR = path.join(OUTPUT_DIR, 'pdfs');
+const DOWNLOAD_DIR = path.join(OUTPUT_DIR, 'download');
+const PDF_DIR = path.join(DOWNLOAD_DIR, 'pdfs');
 
 const CANDIDATES_FILE = path.join(OUTPUT_DIR, 'candidates.json');
 
-const RESULTS_FILE = path.join(OUTPUT_DIR, 'download-results.json');
+const RESULTS_FILE = path.join(DOWNLOAD_DIR, 'download-results.json');
 
-const ERRORS_FILE = path.join(OUTPUT_DIR, 'download-errors.json');
+const ERRORS_FILE = path.join(DOWNLOAD_DIR, 'download-errors.json');
 
-const PROGRESS_FILE = path.join(OUTPUT_DIR, 'download-progress.json');
+const PROGRESS_FILE = path.join(DOWNLOAD_DIR, 'download-progress.json');
 
 const DEFAULT_DELAY_MS = 300;
 const DEFAULT_CONCURRENCY = 2;
@@ -93,7 +94,7 @@ FragDenStaat PDF Downloader
 
 Usage:
 
-  node downloader.js
+  node download.js
 
 Options:
 
@@ -116,19 +117,15 @@ Options:
 
 Examples:
 
-  node downloader.js --limit 100
+  node download.js --limit 100
 
-  node downloader.js --document-id 12345
+  node download.js --document-id 12345
 
-  node downloader.js --force --limit 20
+  node download.js --force --limit 20
 `);
 }
 
 async function ensureDirectories() {
-    await fsp.mkdir(OUTPUT_DIR, {
-        recursive: true,
-    });
-
     await fsp.mkdir(PDF_DIR, {
         recursive: true,
     });

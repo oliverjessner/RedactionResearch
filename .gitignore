@@ -1,4 +1,4 @@
-output/pdfs
+output/download/pdfs
 node_modules/
 dist/
 build/
