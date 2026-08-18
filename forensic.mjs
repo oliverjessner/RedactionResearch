@@ -3,7 +3,7 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
-import { AnnotationMode, Util, getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
+import { AnnotationMode, Util, VerbosityLevel, getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -44,6 +44,9 @@ const DEFAULT_SCALE = 1.5;
 const DEFAULT_MIN_SCORE = 60;
 
 const MAX_REGIONS_PER_FINDING = 30;
+
+const LARGE_DOCUMENT_PAGE_THRESHOLD = 100;
+const PAGE_PROGRESS_INTERVAL = 25;
 
 const MIN_TEXT_LENGTH = 3;
 const MIN_TEXT_WIDTH_PX = 8;
@@ -450,6 +453,19 @@ function scoreToSeverity(score) {
     }
 
     return 'low';
+}
+
+function formatDuration(milliseconds) {
+    const totalSeconds = Math.max(0, Math.floor(milliseconds / 1000));
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    if (hours > 0) {
+        return `${hours}h ${String(minutes).padStart(2, '0')}m ${String(seconds).padStart(2, '0')}s`;
+    }
+
+    return `${minutes}m ${String(seconds).padStart(2, '0')}s`;
 }
 
 function candidateHasRedactionHint(candidate, fileName) {
@@ -976,7 +992,7 @@ async function scanPage({ pdfDocument, page, pageNumber, scale, noRender }) {
 // Scan one document
 // ---------------------------------------------------------
 
-async function scanDocument(pdfPath, candidate, options) {
+async function scanDocument(pdfPath, candidate, options, onPageProgress = null) {
     const fileName = path.basename(pdfPath);
 
     const bytes = await fs.readFile(pdfPath);
@@ -1008,12 +1024,25 @@ async function scanDocument(pdfPath, candidate, options) {
 
         useWorkerFetch: false,
 
+        // Malformed PDFs often trigger recoverable font/metadata warnings.
+        // Keep scanner output focused on actual document failures.
+        verbosity: VerbosityLevel.ERRORS,
+
         stopAtErrors: false,
     });
 
     const pdfDocument = await loadingTask.promise;
 
     const pageCount = pdfDocument.numPages;
+
+    const reportPageProgress = pageCount >= LARGE_DOCUMENT_PAGE_THRESHOLD && onPageProgress;
+
+    if (reportPageProgress) {
+        await onPageProgress({
+            page: 0,
+            total: pageCount,
+        });
+    }
 
     const findings = [];
 
@@ -1235,6 +1264,16 @@ async function scanDocument(pdfPath, candidate, options) {
             } finally {
                 page.cleanup();
             }
+
+            if (
+                reportPageProgress &&
+                (pageNumber === 1 || pageNumber % PAGE_PROGRESS_INTERVAL === 0 || pageNumber === pageCount)
+            ) {
+                await onPageProgress({
+                    page: pageNumber,
+                    total: pageCount,
+                });
+            }
         }
     } finally {
         await loadingTask.destroy();
@@ -1389,7 +1428,19 @@ async function main() {
         }
 
         try {
-            const result = await scanDocument(pdfPath, candidate, options);
+            const scanStartedAt = Date.now();
+
+            const result = await scanDocument(pdfPath, candidate, options, async ({ page, total }) => {
+                if (page === 0) {
+                    console.log(`[${i + 1}/${pdfFiles.length}] ${fileName} | SCAN large PDF (${total} pages)`);
+                    return;
+                }
+
+                console.log(
+                    `[${i + 1}/${pdfFiles.length}] ${fileName} | ` +
+                        `page ${page}/${total} | elapsed ${formatDuration(Date.now() - scanStartedAt)}`,
+                );
+            });
 
             processed++;
 
