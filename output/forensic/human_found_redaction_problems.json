@@ -1,0 +1,43 @@
+[
+  {
+    "problem_id": "3145:1:DARK_PAGE_CONTENT_HIDES_LIVE_TEXT:1",
+    "document_id": "3145",
+    "file": "3145.pdf",
+    "title": "Untitled",
+    "page": 1,
+    "type": "DARK_PAGE_CONTENT_HIDES_LIVE_TEXT",
+    "risk_score": 94,
+    "severity": "critical",
+    "evidence": {
+      "affected_text_items": 13,
+      "regions": [
+        [
+          202.37,
+          569.21,
+          256.86,
+          585.71
+        ],
+        [
+          585.71,
+          313.93,
+          751.24,
+          375.55
+        ],
+        [
+          107.02,
+          268.57,
+          198.63,
+          285.07
+        ],
+        [
+          107.02,
+          246.72,
+          133.29,
+          261.72
+        ]
+      ]
+    },
+    "source_url": "https://fragdenstaat.de/dokumente/3145-untitled/",
+    "reviewed_at": "2026-08-18T15:58:19.297Z"
+  }
+]

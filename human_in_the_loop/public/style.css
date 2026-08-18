@@ -21,6 +21,10 @@
     box-sizing: border-box;
 }
 
+[hidden] {
+    display: none !important;
+}
+
 html,
 body {
     width: 100%;
@@ -30,6 +34,8 @@ body {
 }
 
 body {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
     overflow: hidden;
 }
 
@@ -87,7 +93,9 @@ h1 {
 
 .progress-stats {
     display: flex;
+    flex-wrap: wrap;
     gap: 20px;
+    row-gap: 4px;
     color: var(--muted);
     font-size: 0.78rem;
 }
@@ -140,16 +148,18 @@ h1 {
 }
 
 .workspace {
-    height: calc(100vh - 92px);
+    min-height: 0;
     display: grid;
     grid-template-columns: minmax(0, 7fr) minmax(360px, 3fr);
 }
 
 .viewer-panel {
     min-width: 0;
+    min-height: 0;
     display: grid;
-    grid-template-rows: 42px 1fr;
+    grid-template-rows: 42px minmax(0, 1fr);
     position: relative;
+    overflow: hidden;
     background: #353a39;
 }
 
@@ -168,6 +178,51 @@ h1 {
     color: #d9e9e3;
 }
 
+.pdf-controls {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.pdf-controls button,
+.pdf-controls input {
+    height: 28px;
+    border: 1px solid #59625f;
+    border-radius: 4px;
+    color: #eef2f0;
+    background: #303936;
+    font-size: 0.7rem;
+}
+
+.pdf-controls button {
+    padding: 0 8px;
+    cursor: pointer;
+}
+
+.pdf-controls button:disabled {
+    cursor: default;
+    opacity: 0.4;
+}
+
+.pdf-controls input {
+    width: 48px;
+    padding: 0 4px;
+    text-align: center;
+}
+
+.pdf-controls label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+#pdf-zoom-label {
+    min-width: 38px;
+    color: #d9dfdc;
+    font-size: 0.68rem;
+    text-align: center;
+}
+
 .status-dot {
     display: inline-block;
     width: 7px;
@@ -177,11 +232,96 @@ h1 {
     background: #76b99e;
 }
 
-#pdf-viewer {
+.scroll-hint {
+    margin-left: 10px;
+    color: #9eaaa6;
+    font-size: 0.66rem;
+}
+
+.viewer-page-findings {
+    margin-left: 10px;
+    padding: 3px 6px;
+    border-radius: 4px;
+    color: #202725;
+    background: #e1b64e;
+    font-size: 0.66rem;
+    white-space: nowrap;
+}
+
+.pdf-scroll {
+    min-width: 0;
+    min-height: 0;
+    width: 100%;
+    padding: 24px;
+    position: relative;
+    overflow-x: auto;
+    overflow-y: scroll;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    -webkit-overflow-scrolling: touch;
+    background: #4b504f;
+    user-select: none;
+}
+
+.pdf-pages {
+    --pdf-zoom: 1;
+    width: 100%;
+    min-height: 100%;
+}
+
+.pdf-page {
+    width: calc(100% * var(--pdf-zoom));
+    min-width: 300px;
+    aspect-ratio: 210 / 297;
+    margin: 0 auto 24px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 22px rgb(0 0 0 / 0.35);
+    background: #fff;
+}
+
+.pdf-page img {
     width: 100%;
     height: 100%;
-    border: 0;
-    background: #353a39;
+    display: block;
+    object-fit: contain;
+}
+
+.pdf-page-label {
+    padding: 4px 7px;
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 1;
+    border-radius: 4px;
+    color: #f1f4f3;
+    background: rgb(25 31 29 / 0.78);
+    font-size: 0.66rem;
+    pointer-events: none;
+}
+
+.pdf-page-status {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    color: #59625f;
+    background: #eeece6;
+    font-size: 0.78rem;
+}
+
+.pdf-loading {
+    width: max-content;
+    max-width: calc(100% - 48px);
+    margin: 20px auto;
+    padding: 9px 12px;
+    position: sticky;
+    bottom: 18px;
+    border-radius: 5px;
+    color: #eff3f1;
+    background: rgb(20 27 25 / 0.9);
+    font-size: 0.75rem;
+    text-align: center;
 }
 
 .empty-state {
@@ -192,8 +332,20 @@ h1 {
     color: #d3d8d6;
 }
 
+.visually-hidden {
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    position: absolute;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
 .review-panel {
     min-width: 0;
+    min-height: 0;
     display: grid;
     grid-template-rows: minmax(0, 1fr) auto auto;
     border-left: 1px solid var(--line);
@@ -317,6 +469,57 @@ dd {
     margin-bottom: 18px;
 }
 
+.document-findings-section {
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    background: #f7f4ec;
+}
+
+#document-findings-summary {
+    margin-bottom: 10px;
+    color: var(--muted);
+    font-size: 0.76rem;
+    line-height: 1.4;
+}
+
+.document-findings {
+    display: grid;
+    gap: 6px;
+}
+
+.document-finding {
+    width: 100%;
+    padding: 9px 10px;
+    display: grid;
+    gap: 3px;
+    border: 1px solid #cec8bb;
+    border-radius: 4px;
+    color: var(--ink);
+    background: #fff;
+    text-align: left;
+    cursor: pointer;
+}
+
+.document-finding:hover {
+    border-color: #8e978f;
+}
+
+.document-finding.active {
+    border-color: var(--critical);
+    box-shadow: inset 3px 0 0 var(--critical);
+    background: #fff8f5;
+}
+
+.document-finding strong {
+    font-size: 0.76rem;
+}
+
+.document-finding span {
+    color: var(--muted);
+    font-size: 0.7rem;
+}
+
 .detail-section code {
     display: block;
     overflow-wrap: anywhere;
@@ -336,6 +539,53 @@ dd {
     background: #f0ede5;
     font: 0.72rem/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     white-space: pre-wrap;
+}
+
+.recovered-section {
+    padding: 13px;
+    border: 1px solid #d7b780;
+    border-radius: 5px;
+    background: #fff8e8;
+}
+
+.recovered-heading {
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.recovered-heading h3 {
+    margin-bottom: 0;
+    color: #6f4611;
+}
+
+.recovered-heading span {
+    padding: 3px 6px;
+    border-radius: 999px;
+    color: #fff;
+    background: #765018;
+    font-size: 0.6rem;
+    font-weight: 850;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+#recovered-status {
+    margin: 0;
+    color: #765c38;
+    font-size: 0.76rem;
+    line-height: 1.45;
+}
+
+#recovered-text {
+    max-height: 260px;
+    border-color: #d7b780;
+    color: #24170a;
+    background: #fffdf8;
+    font-size: 0.8rem;
+    user-select: text;
 }
 
 .source-section a {
@@ -458,7 +708,6 @@ kbd {
     }
 
     .workspace {
-        height: calc(100vh - 153px);
         grid-template-columns: minmax(0, 6fr) minmax(340px, 4fr);
     }
 }

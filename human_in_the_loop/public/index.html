@@ -5,8 +5,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="color-scheme" content="light" />
         <title>Redaction Review Desk</title>
-        <link rel="stylesheet" href="/style.css" />
-        <script src="/app.js" defer></script>
+        <link rel="stylesheet" href="/style.css?v=20260818-7" />
+        <script src="/app.js?v=20260818-7" defer></script>
     </head>
     <body>
         <header class="topbar">
@@ -16,11 +16,12 @@
             </div>
 
             <div class="progress-block" aria-live="polite">
-                <strong id="review-position">Review – / –</strong>
+                <strong id="review-position">PDF – / – · Fund – / –</strong>
                 <div class="progress-stats">
-                    <span>Accepted <b id="accepted-count">0</b></span>
-                    <span>Skipped <b id="skipped-count">0</b></span>
-                    <span>Remaining <b id="remaining-count">0</b></span>
+                    <span>PDFs offen <b id="open-documents-count">0</b></span>
+                    <span>Funde bestätigt <b id="accepted-count">0</b></span>
+                    <span>Funde übersprungen <b id="skipped-count">0</b></span>
+                    <span>Funde offen <b id="remaining-count">0</b></span>
                 </div>
                 <div class="progress-track" aria-hidden="true">
                     <span id="progress-fill"></span>
@@ -53,10 +54,27 @@
                     <div>
                         <span class="status-dot"></span>
                         <span id="viewer-label">Kein PDF ausgewählt</span>
+                        <strong id="viewer-page-findings" class="viewer-page-findings"></strong>
+                        <span class="scroll-hint">Mausrad: durch alle PDF-Seiten scrollen</span>
+                    </div>
+                    <div class="pdf-controls" aria-label="PDF-Steuerung">
+                        <button id="pdf-page-previous" type="button" title="Vorherige PDF-Seite">− Seite</button>
+                        <label>
+                            <span class="visually-hidden">PDF-Seite</span>
+                            <input id="pdf-page-number" type="number" min="1" value="1" inputmode="numeric" />
+                            <span>/ <b id="pdf-page-count">–</b></span>
+                        </label>
+                        <button id="pdf-page-next" type="button" title="Nächste PDF-Seite">+ Seite</button>
+                        <button id="pdf-zoom-out" type="button" title="Verkleinern">−</button>
+                        <span id="pdf-zoom-label">100%</span>
+                        <button id="pdf-zoom-in" type="button" title="Vergrößern">+</button>
                     </div>
                     <a id="open-pdf" href="#" target="_blank" rel="noopener" hidden>In neuem Tab öffnen</a>
                 </div>
-                <iframe id="pdf-viewer" title="PDF zur manuellen Prüfung"></iframe>
+                <div id="pdf-scroll" class="pdf-scroll" tabindex="0" aria-label="Scrollbarer PDF-Bereich">
+                    <div id="pdf-pages" class="pdf-pages"></div>
+                    <p id="pdf-loading" class="pdf-loading">PDF-Seite wird geladen …</p>
+                </div>
                 <div id="empty-viewer" class="empty-state">
                     <p>Verdachtsfälle werden geladen …</p>
                 </div>
@@ -99,6 +117,12 @@
                         </div>
                     </dl>
 
+                    <section class="detail-section document-findings-section">
+                        <h3>Alle Funde in diesem PDF</h3>
+                        <p id="document-findings-summary"></p>
+                        <div id="document-findings" class="document-findings"></div>
+                    </section>
+
                     <section class="detail-section">
                         <h3>Fehlertyp</h3>
                         <code id="problem-type">–</code>
@@ -109,6 +133,15 @@
                         <pre id="evidence">{}</pre>
                     </section>
 
+                    <section class="detail-section recovered-section">
+                        <div class="recovered-heading">
+                            <h3>Text hinter der Schwärzung</h3>
+                            <span>Nur lokal</span>
+                        </div>
+                        <p id="recovered-status">Text wird aus der markierten PDF-Region gelesen …</p>
+                        <pre id="recovered-text" hidden></pre>
+                    </section>
+
                     <section class="detail-section source-section">
                         <h3>Quelle</h3>
                         <a id="source-url" href="#" target="_blank" rel="noopener noreferrer">Quelle öffnen</a>
@@ -116,8 +149,8 @@
                     </section>
 
                     <p class="privacy-note">
-                        Ausschließlich technische Verdachtsmetadaten. Es wird kein verborgener oder geschwärzter Text
-                        angezeigt.
+                        Der rekonstruierte Text wird ausschließlich lokal angezeigt und nicht in den Review-JSON-Dateien
+                        gespeichert.
                     </p>
                 </div>
 

@@ -1,5 +1,6 @@
 output/download/pdfs
 node_modules/
+temp/
 dist/
 build/
 .next/

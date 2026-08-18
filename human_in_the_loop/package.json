@@ -8,6 +8,8 @@
     "test": "node --test test/server.test.js"
   },
   "dependencies": {
-    "express": "^5.1.0"
+    "@napi-rs/canvas": "^1.0.6",
+    "express": "^5.1.0",
+    "pdfjs-dist": "^6.2.108"
   }
 }

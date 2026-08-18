@@ -58,6 +58,18 @@ test('API safely serves, reviews, and persists flattened problems', async () => 
         await once(server, 'listening');
 
         const baseUrl = `http://127.0.0.1:${port}`;
+        const appResponse = await fetch(`${baseUrl}/`);
+        const appMarkup = await appResponse.text();
+        const appScript = await (await fetch(`${baseUrl}/app.js?v=20260818-7`)).text();
+
+        assert.equal(appResponse.status, 200);
+        assert.match(appMarkup, /id="pdf-scroll"/);
+        assert.match(appMarkup, /id="pdf-pages"/);
+        assert.match(appMarkup, /id="document-findings"/);
+        assert.match(appMarkup, /PDFs offen/);
+        assert.equal(appScript.includes("addEventListener('wheel'"), false);
+        assert.match(appScript, /const isUnreviewed = !state\.reviewed\[problem\.problem_id\]/);
+
         const problemsResponse = await fetch(`${baseUrl}/api/problems`);
         const problemsPayload = await problemsResponse.json();
 
@@ -66,6 +78,17 @@ test('API safely serves, reviews, and persists flattened problems', async () => 
         assert.equal(problemsPayload.problems[0].risk_score, 98);
         assert.equal(problemsPayload.problems[1].page, null);
         assert.equal(problemsPayload.problems[1].evidence.hidden_text, undefined);
+
+        const invalidPageResponse = await fetch(`${baseUrl}/api/pdf-page?filename=123.pdf&page=0`);
+        assert.equal(invalidPageResponse.status, 400);
+
+        const noPageResponse = await fetch(
+            `${baseUrl}/api/recovered-text?problem_id=${encodeURIComponent(problemsPayload.problems[1].problem_id)}`,
+        );
+        const noPagePayload = await noPageResponse.json();
+        assert.equal(noPageResponse.status, 200);
+        assert.equal(noPagePayload.available, false);
+        assert.equal(JSON.stringify(noPagePayload).includes('must never leave the server'), false);
 
         const problemId = problemsPayload.problems[0].problem_id;
         const accept = () =>
