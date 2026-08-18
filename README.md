@@ -28,6 +28,15 @@ Forensische Ergebnisse und Scan-Fortschritt werden unter `output/forensic/` gesp
 
 # Step 4 - double check with human
 
+```bash
+cd human_in_the_loop
+npm install
+npm start
+```
+
+Anschließend `http://localhost:3000` öffnen. Menschlich bestätigte Funde und Review-Fortschritt werden unter
+`output/forensic/` gespeichert.
+
 ## Problems
 
 - Schwarzer Balken über weiterhin vorhandenem Text

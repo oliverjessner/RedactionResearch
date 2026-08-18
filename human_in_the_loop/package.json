@@ -1,0 +1,13 @@
+{
+  "name": "redaction-research-human-review",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local human-in-the-loop review UI for detected PDF redaction problems",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test test/server.test.js"
+  },
+  "dependencies": {
+    "express": "^5.1.0"
+  }
+}
