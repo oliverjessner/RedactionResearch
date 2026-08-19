@@ -47,12 +47,14 @@ body {
 }
 
 button,
-select {
+select,
+input {
     font: inherit;
 }
 
 button:focus-visible,
 select:focus-visible,
+input:focus-visible,
 a:focus-visible {
     outline: 3px solid color-mix(in srgb, var(--focus) 55%, transparent);
     outline-offset: 2px;
@@ -241,6 +243,19 @@ h1 {
     font: 700 1.08rem/1.25 Georgia, 'Times New Roman', serif;
 }
 
+.found-document-heading .found-document-project {
+    width: max-content;
+    max-width: 100%;
+    padding: 3px 6px;
+    border-radius: 4px;
+    color: #31584b;
+    background: #e3ece7;
+    font-size: 0.64rem;
+    font-weight: 850;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
 .found-document-heading span,
 .found-document-metadata {
     color: var(--muted);
@@ -304,6 +319,19 @@ h1 {
     color: #e5e9e7;
     background: #202725;
     font-size: 0.78rem;
+    overflow-x: auto;
+}
+
+.viewer-toolbar > * {
+    flex: 0 0 auto;
+}
+
+.viewer-toolbar > div:first-child {
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .viewer-toolbar a {
@@ -346,6 +374,46 @@ h1 {
     display: flex;
     align-items: center;
     gap: 5px;
+}
+
+.coordinate-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.coordinate-controls input,
+.coordinate-controls button {
+    height: 28px;
+    border: 1px solid #59625f;
+    border-radius: 4px;
+    color: #eef2f0;
+    background: #303936;
+    font-size: 0.7rem;
+}
+
+.coordinate-controls input {
+    width: 176px;
+    padding: 0 8px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.coordinate-controls input::placeholder {
+    color: #aab4b0;
+}
+
+.coordinate-controls input:invalid {
+    border-color: #ff7a6f;
+}
+
+.coordinate-controls button {
+    padding: 0 8px;
+    cursor: pointer;
+}
+
+.coordinate-controls button:disabled {
+    cursor: default;
+    opacity: 0.4;
 }
 
 #pdf-zoom-label {
@@ -453,12 +521,29 @@ h1 {
     background: rgb(33 118 174 / 0.42);
 }
 
+.pdf-coordinate-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.pdf-coordinate-box {
+    position: absolute;
+    border: 3px solid #f33f36;
+    box-shadow:
+        0 0 0 1px rgb(255 255 255 / 0.95),
+        0 0 0 4px rgb(243 63 54 / 0.22);
+    background: rgb(243 63 54 / 0.12);
+}
+
 .pdf-page-label {
     padding: 4px 7px;
     position: absolute;
     top: 8px;
     left: 8px;
-    z-index: 3;
+    z-index: 4;
     border-radius: 4px;
     color: #f1f4f3;
     background: rgb(25 31 29 / 0.78);
@@ -469,7 +554,7 @@ h1 {
 .pdf-page-status {
     position: absolute;
     inset: 0;
-    z-index: 4;
+    z-index: 5;
     display: grid;
     place-items: center;
     color: #59625f;

@@ -1,31 +1,48 @@
-const crypto = require('node:crypto');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 
 const { createCanvas } = require('@napi-rs/canvas');
 const express = require('express');
+const {
+    DEFAULT_PROJECT,
+    getProblem: getDatabaseProblem,
+    getProjectId,
+    listProblems: listDatabaseProblems,
+    listReviewDecisions,
+    openForensicDatabase,
+    saveReview,
+} = require('../lib/forensic-db.js');
 
 const APP_DIR = __dirname;
 const PROJECT_DIR = path.resolve(APP_DIR, '..');
 const OUTPUT_DIR = path.join(PROJECT_DIR, 'output');
 const FORENSIC_DIR = path.join(OUTPUT_DIR, 'forensic');
+const PDF_ROOT = path.join(OUTPUT_DIR, 'download', 'pdfs');
 
-const PROBLEMS_FILE = path.resolve(
-    process.env.HITL_PROBLEMS_FILE || path.join(FORENSIC_DIR, 'redaction_problems.json'),
-);
-const PDF_DIR = path.resolve(process.env.HITL_PDF_DIR || path.join(OUTPUT_DIR, 'download', 'pdfs'));
-const REVIEW_DIR = path.resolve(process.env.HITL_REVIEW_DIR || FORENSIC_DIR);
-const ACCEPTED_FILE = path.join(REVIEW_DIR, 'human_found_redaction_problems.json');
-const PROGRESS_FILE = path.join(REVIEW_DIR, 'human_review_progress.json');
+const DATABASE_FILE = path.resolve(process.env.HITL_DATABASE_FILE || path.join(FORENSIC_DIR, 'forensic.sqlite'));
+const PROJECT = process.env.HITL_PROJECT || DEFAULT_PROJECT;
 const PDFJS_ROOT = path.dirname(require.resolve('pdfjs-dist/package.json'));
 const PDFJS_CMAP_URL = `${path.join(PDFJS_ROOT, 'cmaps')}${path.sep}`;
 const PDFJS_STANDARD_FONT_URL = `${path.join(PDFJS_ROOT, 'standard_fonts')}${path.sep}`;
 const PDFJS_ICC_URL = `${path.join(PDFJS_ROOT, 'iccs')}${path.sep}`;
 const PDFJS_WASM_URL = `${path.join(PDFJS_ROOT, 'wasm')}${path.sep}`;
 const FORENSIC_RENDER_SCALE = 1.5;
+const PDF_DOCUMENT_CACHE_LIMIT = 3;
+const PDF_ARTIFACT_CACHE_MAX_ENTRIES = 48;
+const PDF_ARTIFACT_CACHE_MAX_BYTES = 128 * 1024 * 1024;
+const PDF_BROWSER_CACHE = 'private, max-age=3600';
 
 const HOST = process.env.HOST || '127.0.0.1';
 const PORT = Number(process.env.PORT || 3000);
+const database = openForensicDatabase(DATABASE_FILE);
+const PROJECT_ID = getProjectId(database, PROJECT);
+
+if (!PROJECT_ID) {
+    database.close();
+    throw new Error(`Unknown forensic project: ${PROJECT}`);
+}
+
+const PDF_DIR = path.resolve(process.env.HITL_PDF_DIR || path.join(PDF_ROOT, String(PROJECT_ID)));
 
 const ALLOWED_EVIDENCE_KEYS = new Set([
     'affected_text_items',
@@ -42,49 +59,6 @@ const ALLOWED_EVIDENCE_KEYS = new Set([
 
 function isPlainObject(value) {
     return Boolean(value && typeof value === 'object' && !Array.isArray(value));
-}
-
-async function readJson(file, fallback) {
-    try {
-        return JSON.parse(await fs.readFile(file, 'utf8'));
-    } catch (error) {
-        if (error.code === 'ENOENT') {
-            return fallback;
-        }
-
-        throw new Error(`Invalid or unreadable JSON at ${file}: ${error.message}`);
-    }
-}
-
-async function writeJsonAtomic(file, data) {
-    await fs.mkdir(path.dirname(file), {
-        recursive: true,
-    });
-
-    const temporaryFile = `${file}.${process.pid}.${crypto.randomUUID()}.tmp`;
-
-    try {
-        await fs.writeFile(temporaryFile, `${JSON.stringify(data, null, 2)}\n`, 'utf8');
-        await fs.rename(temporaryFile, file);
-    } catch (error) {
-        await fs.unlink(temporaryFile).catch(cleanupError => {
-            if (cleanupError.code !== 'ENOENT') {
-                error.cleanupError = cleanupError;
-            }
-        });
-
-        throw error;
-    }
-}
-
-function numberOrNull(value) {
-    if (value === null || value === undefined || value === '') {
-        return null;
-    }
-
-    const parsed = Number(value);
-
-    return Number.isFinite(parsed) ? parsed : null;
 }
 
 function stringOrNull(value) {
@@ -144,17 +118,6 @@ function sanitizeEvidence(evidence) {
     }
 
     return clean;
-}
-
-function severityFromScore(score) {
-    if (score >= 90) return 'critical';
-    if (score >= 75) return 'high';
-    if (score >= 60) return 'medium';
-    return 'low';
-}
-
-function createProblemId(documentId, page, type, index) {
-    return `${documentId}:${page ?? 'document'}:${type}:${index}`;
 }
 
 function normalizeRegion(value) {
@@ -307,11 +270,201 @@ async function resolvePdfPath(filename) {
 }
 
 let pdfjsPromise = null;
+const pdfDocumentCache = new Map();
+const pdfArtifactCache = new Map();
+let pdfArtifactCacheBytes = 0;
 
 function getPdfjs() {
     pdfjsPromise ||= import('pdfjs-dist/legacy/build/pdf.mjs');
 
     return pdfjsPromise;
+}
+
+async function resolvePdfDescriptor(filename) {
+    const pdfPath = await resolvePdfPath(filename);
+    const stats = await fs.stat(pdfPath);
+
+    return {
+        pdfPath,
+        version: `${pdfPath}:${stats.size}:${stats.mtimeMs}`,
+    };
+}
+
+function touchCacheEntry(cache, key, entry) {
+    cache.delete(key);
+    cache.set(key, entry);
+}
+
+async function trimPdfDocumentCache(excludedKey = null) {
+    while (pdfDocumentCache.size > PDF_DOCUMENT_CACHE_LIMIT) {
+        const candidate = [...pdfDocumentCache.entries()].find(
+            ([key, entry]) => key !== excludedKey && entry.active === 0,
+        );
+
+        if (!candidate) return;
+
+        const [key, entry] = candidate;
+        pdfDocumentCache.delete(key);
+
+        try {
+            await entry.promise.catch(() => null);
+            await entry.loadingTask?.destroy();
+        } catch {
+            // Cache eviction is best effort.
+        }
+    }
+}
+
+async function acquirePdfDocument(descriptor) {
+    let entry = pdfDocumentCache.get(descriptor.version);
+
+    if (!entry) {
+        entry = {
+            active: 0,
+            loadingTask: null,
+            operationQueue: Promise.resolve(),
+            promise: null,
+        };
+        entry.promise = (async () => {
+            const { getDocument, VerbosityLevel } = await getPdfjs();
+            const bytes = await fs.readFile(descriptor.pdfPath);
+
+            entry.loadingTask = getDocument({
+                data: new Uint8Array(bytes),
+                cMapUrl: PDFJS_CMAP_URL,
+                cMapPacked: true,
+                standardFontDataUrl: PDFJS_STANDARD_FONT_URL,
+                iccUrl: PDFJS_ICC_URL,
+                wasmUrl: PDFJS_WASM_URL,
+                useWorkerFetch: false,
+                verbosity: VerbosityLevel.ERRORS,
+                stopAtErrors: false,
+            });
+
+            return entry.loadingTask.promise;
+        })().catch(error => {
+            if (pdfDocumentCache.get(descriptor.version) === entry) {
+                pdfDocumentCache.delete(descriptor.version);
+            }
+
+            throw error;
+        });
+        pdfDocumentCache.set(descriptor.version, entry);
+    } else {
+        touchCacheEntry(pdfDocumentCache, descriptor.version, entry);
+    }
+
+    entry.active++;
+
+    try {
+        const pdfDocument = await entry.promise;
+        await trimPdfDocumentCache(descriptor.version);
+        let released = false;
+
+        return {
+            entry,
+            pdfDocument,
+            release() {
+                if (released) return;
+
+                released = true;
+                entry.active = Math.max(0, entry.active - 1);
+                void trimPdfDocumentCache();
+            },
+        };
+    } catch (error) {
+        entry.active = Math.max(0, entry.active - 1);
+        throw error;
+    }
+}
+
+async function withPdfDocument(descriptor, operation) {
+    const handle = await acquirePdfDocument(descriptor);
+    const operationPromise = handle.entry.operationQueue.then(() => operation(handle.pdfDocument));
+
+    handle.entry.operationQueue = operationPromise.catch(() => {});
+
+    try {
+        return await operationPromise;
+    } finally {
+        handle.release();
+    }
+}
+
+function cachedArtifactSize(value) {
+    if (Buffer.isBuffer(value)) return value.length;
+    return Buffer.byteLength(JSON.stringify(value));
+}
+
+function trimPdfArtifactCache(excludedKey = null) {
+    while (
+        pdfArtifactCache.size > PDF_ARTIFACT_CACHE_MAX_ENTRIES ||
+        pdfArtifactCacheBytes > PDF_ARTIFACT_CACHE_MAX_BYTES
+    ) {
+        const candidate = [...pdfArtifactCache.entries()].find(
+            ([key, entry]) => key !== excludedKey && entry.ready,
+        );
+
+        if (!candidate) return;
+
+        const [key, entry] = candidate;
+        pdfArtifactCache.delete(key);
+        pdfArtifactCacheBytes = Math.max(0, pdfArtifactCacheBytes - entry.size);
+    }
+}
+
+async function getCachedPdfArtifact(key, producer) {
+    let entry = pdfArtifactCache.get(key);
+
+    if (entry) {
+        touchCacheEntry(pdfArtifactCache, key, entry);
+        return entry.promise;
+    }
+
+    entry = {
+        promise: null,
+        ready: false,
+        size: 0,
+    };
+    entry.promise = Promise.resolve()
+        .then(producer)
+        .then(value => {
+            entry.ready = true;
+            entry.size = cachedArtifactSize(value);
+            pdfArtifactCacheBytes += entry.size;
+            trimPdfArtifactCache(key);
+            return value;
+        })
+        .catch(error => {
+            if (pdfArtifactCache.get(key) === entry) {
+                pdfArtifactCache.delete(key);
+            }
+
+            throw error;
+        });
+    pdfArtifactCache.set(key, entry);
+    trimPdfArtifactCache(key);
+
+    return entry.promise;
+}
+
+async function closePdfCaches() {
+    pdfArtifactCache.clear();
+    pdfArtifactCacheBytes = 0;
+    const entries = [...pdfDocumentCache.values()];
+    pdfDocumentCache.clear();
+
+    await Promise.all(
+        entries.map(async entry => {
+            try {
+                await entry.promise.catch(() => null);
+                await entry.operationQueue.catch(() => null);
+                await entry.loadingTask?.destroy();
+            } catch {
+                // Server shutdown is best effort.
+            }
+        }),
+    );
 }
 
 async function recoverTextForProblem(problem) {
@@ -333,24 +486,9 @@ async function recoverTextForProblem(problem) {
         };
     }
 
-    const [{ getDocument, Util, VerbosityLevel }, pdfPath] = await Promise.all([getPdfjs(), resolvePdfPath(problem.file)]);
-    const bytes = await fs.readFile(pdfPath);
-    const loadingTask = getDocument({
-        data: new Uint8Array(bytes),
-        cMapUrl: PDFJS_CMAP_URL,
-        cMapPacked: true,
-        standardFontDataUrl: PDFJS_STANDARD_FONT_URL,
-        iccUrl: PDFJS_ICC_URL,
-        wasmUrl: PDFJS_WASM_URL,
-        useWorkerFetch: false,
-        verbosity: VerbosityLevel.ERRORS,
-        stopAtErrors: false,
-    });
-    let page = null;
+    const [{ Util }, descriptor] = await Promise.all([getPdfjs(), resolvePdfDescriptor(problem.file)]);
 
-    try {
-        const pdfDocument = await loadingTask.promise;
-
+    return withPdfDocument(descriptor, async pdfDocument => {
         if (problem.page > pdfDocument.numPages) {
             return {
                 available: false,
@@ -359,7 +497,7 @@ async function recoverTextForProblem(problem) {
             };
         }
 
-        page = await pdfDocument.getPage(problem.page);
+        const page = await pdfDocument.getPage(problem.page);
 
         const viewport = page.getViewport({
             scale: FORENSIC_RENDER_SCALE,
@@ -393,98 +531,14 @@ async function recoverTextForProblem(problem) {
                 .filter(Boolean)
                 .join('\n'),
         };
-    } finally {
-        page?.cleanup();
-        await loadingTask.destroy();
-    }
-}
-
-function normalizeProblems(rawDocuments) {
-    if (!Array.isArray(rawDocuments)) {
-        return [];
-    }
-
-    const flattened = [];
-
-    for (const [documentIndex, rawDocument] of rawDocuments.entries()) {
-        if (!isPlainObject(rawDocument)) {
-            continue;
-        }
-
-        const file = stringOrNull(rawDocument.file);
-
-        if (!file || path.basename(file) !== file || !file.toLowerCase().endsWith('.pdf')) {
-            continue;
-        }
-
-        const documentId =
-            stringOrNull(rawDocument.document_id) || path.basename(file, path.extname(file)) || `document-${documentIndex}`;
-        const rawProblems = Array.isArray(rawDocument.problems) ? rawDocument.problems : [rawDocument];
-
-        for (const [problemIndex, rawProblem] of rawProblems.entries()) {
-            if (!isPlainObject(rawProblem)) {
-                continue;
-            }
-
-            const type = stringOrNull(rawProblem.type) || 'UNKNOWN_PROBLEM';
-            const page = numberOrNull(rawProblem.page);
-            const riskScore = numberOrNull(rawProblem.risk_score) ?? numberOrNull(rawDocument.highest_risk_score) ?? 0;
-
-            flattened.push({
-                problem_id: createProblemId(documentId, page, type, problemIndex),
-                document_id: documentId,
-                file,
-                title: stringOrNull(rawDocument.title),
-                page,
-                type,
-                risk_score: riskScore,
-                severity: stringOrNull(rawProblem.severity)?.toLowerCase() || severityFromScore(riskScore),
-                evidence: sanitizeEvidence(rawProblem.evidence),
-                source_url: stringOrNull(rawDocument.source_url),
-                page_count: numberOrNull(rawDocument.page_count),
-            });
-        }
-    }
-
-    return flattened.sort((a, b) => {
-        const scoreDifference = b.risk_score - a.risk_score;
-
-        if (scoreDifference !== 0) return scoreDifference;
-
-        const documentDifference = a.document_id.localeCompare(b.document_id, undefined, {
-            numeric: true,
-        });
-
-        if (documentDifference !== 0) return documentDifference;
-
-        const pageDifference = (a.page ?? Number.MAX_SAFE_INTEGER) - (b.page ?? Number.MAX_SAFE_INTEGER);
-
-        if (pageDifference !== 0) return pageDifference;
-
-        return a.problem_id.localeCompare(b.problem_id, undefined, {
-            numeric: true,
-        });
     });
 }
 
 async function loadProblems() {
-    return normalizeProblems(await readJson(PROBLEMS_FILE, []));
-}
-
-function toAcceptedRecord(problem) {
-    return {
-        problem_id: problem.problem_id,
-        document_id: problem.document_id,
-        file: problem.file,
-        title: problem.title,
-        page: problem.page,
-        type: problem.type,
-        risk_score: problem.risk_score,
-        severity: problem.severity,
-        evidence: problem.evidence,
-        source_url: problem.source_url,
-        reviewed_at: new Date().toISOString(),
-    };
+    return listDatabaseProblems(database, PROJECT).map(problem => ({
+        ...problem,
+        evidence: sanitizeEvidence(problem.evidence),
+    }));
 }
 
 const app = express();
@@ -512,10 +566,8 @@ app.get('/api/problems', async (request, response, next) => {
 
 app.get('/api/progress', async (request, response, next) => {
     try {
-        const progress = await readJson(PROGRESS_FILE, { reviewed: {} });
-
         response.json({
-            reviewed: isPlainObject(progress.reviewed) ? progress.reviewed : {},
+            reviewed: listReviewDecisions(database, PROJECT),
         });
     } catch (error) {
         next(error);
@@ -531,8 +583,10 @@ app.get('/api/recovered-text', async (request, response, next) => {
             return;
         }
 
-        const problems = await loadProblems();
-        const problem = problems.find(item => item.problem_id === problemId);
+        const databaseProblem = getDatabaseProblem(database, PROJECT, problemId);
+        const problem = databaseProblem
+            ? { ...databaseProblem, evidence: sanitizeEvidence(databaseProblem.evidence) }
+            : null;
 
         if (!problem) {
             response.status(404).json({ error: 'Unknown problem_id' });
@@ -564,62 +618,45 @@ app.get('/api/pdf-page', async (request, response, next) => {
         return;
     }
 
-    let loadingTask = null;
-    let page = null;
-
     try {
-        const [{ AnnotationMode, getDocument, VerbosityLevel }, pdfPath] = await Promise.all([
-            getPdfjs(),
-            resolvePdfPath(filename),
-        ]);
-        const bytes = await fs.readFile(pdfPath);
+        const descriptor = await resolvePdfDescriptor(filename);
+        const cacheKey = `page:${descriptor.version}:${pageNumber}:${requestedWidth}`;
+        const cacheStatus = pdfArtifactCache.has(cacheKey) ? 'HIT' : 'MISS';
+        const png = await getCachedPdfArtifact(cacheKey, async () => {
+            const { AnnotationMode } = await getPdfjs();
 
-        loadingTask = getDocument({
-            data: new Uint8Array(bytes),
-            cMapUrl: PDFJS_CMAP_URL,
-            cMapPacked: true,
-            standardFontDataUrl: PDFJS_STANDARD_FONT_URL,
-            iccUrl: PDFJS_ICC_URL,
-            wasmUrl: PDFJS_WASM_URL,
-            useWorkerFetch: false,
-            verbosity: VerbosityLevel.ERRORS,
-            stopAtErrors: false,
+            return withPdfDocument(descriptor, async pdfDocument => {
+                if (pageNumber > pdfDocument.numPages) {
+                    const error = new Error(`PDF has only ${pdfDocument.numPages} pages`);
+                    error.status = 404;
+                    throw error;
+                }
+
+                const page = await pdfDocument.getPage(pageNumber);
+                const baseViewport = page.getViewport({ scale: 1 });
+                const viewport = page.getViewport({ scale: requestedWidth / baseViewport.width });
+                const canvas = createCanvas(Math.ceil(viewport.width), Math.ceil(viewport.height));
+                const renderTask = page.render({
+                    canvasContext: canvas.getContext('2d'),
+                    viewport,
+                    annotationMode: AnnotationMode.ENABLE,
+                });
+
+                await renderTask.promise;
+                return canvas.toBuffer('image/png');
+            });
         });
-
-        const pdfDocument = await loadingTask.promise;
-
-        if (pageNumber > pdfDocument.numPages) {
-            response.status(404).json({ error: `PDF has only ${pdfDocument.numPages} pages` });
-            return;
-        }
-
-        page = await pdfDocument.getPage(pageNumber);
-
-        const baseViewport = page.getViewport({ scale: 1 });
-        const viewport = page.getViewport({ scale: requestedWidth / baseViewport.width });
-        const canvas = createCanvas(Math.ceil(viewport.width), Math.ceil(viewport.height));
-        const renderTask = page.render({
-            canvasContext: canvas.getContext('2d'),
-            viewport,
-            annotationMode: AnnotationMode.ENABLE,
-        });
-
-        await renderTask.promise;
-
-        const png = canvas.toBuffer('image/png');
 
         response.set({
-            'Cache-Control': 'private, no-store',
+            'Cache-Control': PDF_BROWSER_CACHE,
             'Content-Type': 'image/png',
             'Content-Length': String(png.length),
+            'X-PDF-Cache': cacheStatus,
             'X-Content-Type-Options': 'nosniff',
         });
         response.send(png);
     } catch (error) {
         next(error);
-    } finally {
-        page?.cleanup();
-        await loadingTask?.destroy().catch(() => {});
     }
 });
 
@@ -638,58 +675,47 @@ app.get('/api/pdf-text-layer', async (request, response, next) => {
         return;
     }
 
-    let loadingTask = null;
-    let page = null;
-
     try {
-        const [{ getDocument, Util, VerbosityLevel }, pdfPath] = await Promise.all([getPdfjs(), resolvePdfPath(filename)]);
-        const bytes = await fs.readFile(pdfPath);
+        const [{ Util }, descriptor] = await Promise.all([getPdfjs(), resolvePdfDescriptor(filename)]);
+        const cacheKey = `text:${descriptor.version}:${pageNumber}:${requestedWidth}`;
+        const cacheStatus = pdfArtifactCache.has(cacheKey) ? 'HIT' : 'MISS';
+        const payload = await getCachedPdfArtifact(cacheKey, () =>
+            withPdfDocument(descriptor, async pdfDocument => {
+                if (pageNumber > pdfDocument.numPages) {
+                    const error = new Error(`PDF has only ${pdfDocument.numPages} pages`);
+                    error.status = 404;
+                    throw error;
+                }
 
-        loadingTask = getDocument({
-            data: new Uint8Array(bytes),
-            cMapUrl: PDFJS_CMAP_URL,
-            cMapPacked: true,
-            standardFontDataUrl: PDFJS_STANDARD_FONT_URL,
-            iccUrl: PDFJS_ICC_URL,
-            wasmUrl: PDFJS_WASM_URL,
-            useWorkerFetch: false,
-            verbosity: VerbosityLevel.ERRORS,
-            stopAtErrors: false,
+                const page = await pdfDocument.getPage(pageNumber);
+                const baseViewport = page.getViewport({ scale: 1 });
+                const viewport = page.getViewport({ scale: requestedWidth / baseViewport.width });
+                const textContent = await page.getTextContent({
+                    includeMarkedContent: false,
+                });
+                const items = textContent.items
+                    .map(item => textItemToLayerItem(item, textContent.styles, viewport, Util))
+                    .filter(Boolean);
+
+                return {
+                    width: roundedCoordinate(viewport.width),
+                    height: roundedCoordinate(viewport.height),
+                    coordinate_width: roundedCoordinate(baseViewport.width * FORENSIC_RENDER_SCALE),
+                    coordinate_height: roundedCoordinate(baseViewport.height * FORENSIC_RENDER_SCALE),
+                    items,
+                };
+            }),
+        );
+
+        response.set({
+            'Cache-Control': PDF_BROWSER_CACHE,
+            'X-PDF-Cache': cacheStatus,
         });
-
-        const pdfDocument = await loadingTask.promise;
-
-        if (pageNumber > pdfDocument.numPages) {
-            response.status(404).json({ error: `PDF has only ${pdfDocument.numPages} pages` });
-            return;
-        }
-
-        page = await pdfDocument.getPage(pageNumber);
-
-        const baseViewport = page.getViewport({ scale: 1 });
-        const viewport = page.getViewport({ scale: requestedWidth / baseViewport.width });
-        const textContent = await page.getTextContent({
-            includeMarkedContent: false,
-        });
-        const items = textContent.items
-            .map(item => textItemToLayerItem(item, textContent.styles, viewport, Util))
-            .filter(Boolean);
-
-        response.set('Cache-Control', 'private, no-store');
-        response.json({
-            width: roundedCoordinate(viewport.width),
-            height: roundedCoordinate(viewport.height),
-            items,
-        });
+        response.json(payload);
     } catch (error) {
         next(error);
-    } finally {
-        page?.cleanup();
-        await loadingTask?.destroy().catch(() => {});
     }
 });
-
-let reviewQueue = Promise.resolve();
 
 app.post('/api/review', async (request, response, next) => {
     const problemId = stringOrNull(request.body?.problem_id);
@@ -702,56 +728,8 @@ app.post('/api/review', async (request, response, next) => {
         return;
     }
 
-    const saveReview = async () => {
-        const problems = await loadProblems();
-        const problem = problems.find(item => item.problem_id === problemId);
-
-        if (!problem) {
-            const error = new Error('Unknown problem_id');
-            error.status = 404;
-            throw error;
-        }
-
-        const progress = await readJson(PROGRESS_FILE, { reviewed: {} });
-        const reviewed = isPlainObject(progress.reviewed) ? progress.reviewed : {};
-        const accepted = await readJson(ACCEPTED_FILE, []);
-        const acceptedById = new Map(
-            (Array.isArray(accepted) ? accepted : [])
-                .filter(item => isPlainObject(item) && stringOrNull(item.problem_id))
-                .map(item => [item.problem_id, item]),
-        );
-
-        if (decision === 'accepted') {
-            acceptedById.set(problemId, toAcceptedRecord(problem));
-        } else {
-            acceptedById.delete(problemId);
-        }
-
-        reviewed[problemId] = decision;
-
-        const acceptedOutput = [...acceptedById.values()].sort((a, b) =>
-            a.problem_id.localeCompare(b.problem_id, undefined, { numeric: true }),
-        );
-        const progressOutput = {
-            reviewed,
-            updated_at: new Date().toISOString(),
-        };
-
-        await writeJsonAtomic(ACCEPTED_FILE, acceptedOutput);
-        await writeJsonAtomic(PROGRESS_FILE, progressOutput);
-
-        return {
-            problem_id: problemId,
-            decision,
-            accepted_total: acceptedOutput.length,
-        };
-    };
-
-    const queuedReview = reviewQueue.then(saveReview, saveReview);
-    reviewQueue = queuedReview.catch(() => {});
-
     try {
-        response.json(await queuedReview);
+        response.json(saveReview(database, PROJECT, problemId, decision));
     } catch (error) {
         next(error);
     }
@@ -763,7 +741,7 @@ app.get('/pdf/:filename', async (request, response, next) => {
         const pdfPath = await resolvePdfPath(filename);
 
         response.set({
-            'Cache-Control': 'private, no-store',
+            'Cache-Control': PDF_BROWSER_CACHE,
             'Content-Disposition': `inline; filename="${filename}"`,
             'X-Content-Type-Options': 'nosniff',
         });
@@ -797,7 +775,7 @@ function startServer() {
         throw new Error('PORT must be an integer between 1 and 65535');
     }
 
-    return app.listen(PORT, HOST, error => {
+    const server = app.listen(PORT, HOST, error => {
         if (error) {
             console.error(`Unable to start server on http://${HOST}:${PORT}: ${error.message}`);
             process.exitCode = 1;
@@ -805,10 +783,17 @@ function startServer() {
         }
 
         console.log(`Human review app: http://${HOST}:${PORT}`);
-        console.log(`Problems: ${PROBLEMS_FILE}`);
+        console.log(`Database: ${DATABASE_FILE}`);
+        console.log(`Project:  ${PROJECT}`);
+        console.log(`Project ID: ${PROJECT_ID}`);
         console.log(`PDFs:     ${PDF_DIR}`);
-        console.log(`Reviews:  ${REVIEW_DIR}`);
     });
+
+    server.on('close', () => {
+        database.close();
+        void closePdfCaches();
+    });
+    return server;
 }
 
 if (require.main === module) {
@@ -818,7 +803,6 @@ if (require.main === module) {
 module.exports = {
     app,
     loadProblems,
-    normalizeProblems,
     recoverTextForProblem,
     startServer,
 };

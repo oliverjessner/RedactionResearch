@@ -1,5 +1,7 @@
 # RedactionResearch
 
+Benötigt Node.js 22.5 oder neuer, da Scanner und Review-App das integrierte SQLite-Modul von Node verwenden.
+
 # Step 1 - Collect
 
 start to collect ~3k redacted pdf links from fragDenStaat (14.08.2026)
@@ -13,10 +15,12 @@ Discovery-Ergebnisse und Kandidatenlisten werden unter `output/discovery/` gespe
 # Step 2 - download
 
 ```bash
-node download.js
+node download.js --project-id 1
 ```
 
-Downloads, Download-Ergebnisse und Download-Fortschritt werden unter `output/download/` gespeichert.
+Download-Ergebnisse und Download-Fortschritt werden als JSON unter `output/download/` gespeichert. Die PDF-Dateien
+liegen projektweise unter `output/download/pdfs/<project_id>/`, für `fragdenstaat.de` also unter
+`output/download/pdfs/1/`.
 
 # Step 3 - detect
 
@@ -24,7 +28,10 @@ Downloads, Download-Ergebnisse und Download-Fortschritt werden unter `output/dow
 node forensic.mjs
 ```
 
-Forensische Ergebnisse und Scan-Fortschritt werden unter `output/forensic/` gespeichert.
+Forensische Ergebnisse, Scan-Fortschritt und Fehler werden relational in
+`output/forensic/forensic.sqlite` gespeichert. Neue Scans gehören standardmäßig zum Projekt
+`fragdenstaat.de`; mit `--project NAME` kann ein anderes Projekt gewählt werden. Der Scanner ermittelt die
+zugehörige Projekt-ID aus SQLite und liest die PDFs aus dem entsprechenden Projektordner.
 
 # Step 4 - double check with human
 
@@ -34,8 +41,11 @@ npm install
 npm start
 ```
 
-Anschließend `http://localhost:3000` öffnen. Menschlich bestätigte Funde und Review-Fortschritt werden unter
-`output/forensic/` gespeichert.
+Anschließend `http://localhost:3000` öffnen. Die App liest Findings direkt aus
+`output/forensic/forensic.sqlite` und schreibt Accept-/Skip-Entscheidungen transaktional in dieselbe Datenbank.
+
+Discovery und Download verwenden weiterhin ausschließlich ihre JSON-Dateien unter `output/discovery/` und
+`output/download/`.
 
 ## Problems
 

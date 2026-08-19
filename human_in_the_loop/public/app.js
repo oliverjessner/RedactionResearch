@@ -16,13 +16,19 @@ const state = {
     pdfObserver: null,
     pdfResizeObserver: null,
     pdfScrollFrame: null,
+    coordinateBox: null,
 };
+
+const PDF_RENDER_WIDTH = 1500;
 
 const elements = Object.fromEntries(
     [
         'accept',
         'accepted-count',
         'affected-items',
+        'coordinate-clear',
+        'coordinate-form',
+        'coordinate-input',
         'decision-badge',
         'document-id',
         'document-findings',
@@ -51,6 +57,8 @@ const elements = Object.fromEntries(
         'pdf-zoom-out',
         'previous',
         'problem-documents-count',
+        'project-detail',
+        'project-name',
         'problem-type',
         'recovered-status',
         'recovered-text',
@@ -124,6 +132,7 @@ function renderViewControls() {
     elements['found-overview'].hidden = !foundOverview;
     elements['viewer-panel'].hidden = foundOverview;
     elements['review-panel'].hidden = foundOverview;
+    elements['project-detail'].hidden = !foundView;
     elements['review-actions'].classList.toggle('found-view', foundView);
 }
 
@@ -131,7 +140,7 @@ function foundDocumentGroups() {
     const groups = new Map();
 
     for (const problem of state.filtered) {
-        const key = `${problem.document_id}\u0000${problem.file}`;
+        const key = `${problem.project}\u0000${problem.document_id}\u0000${problem.file}`;
         const existing = groups.get(key);
 
         if (existing) {
@@ -144,6 +153,7 @@ function foundDocumentGroups() {
             groups.set(key, {
                 documentId: problem.document_id,
                 file: problem.file,
+                project: problem.project || 'Ohne Projekt',
                 title: problem.title || 'Ohne Titel',
                 maxScore: problem.risk_score,
                 severity: problem.severity,
@@ -171,6 +181,7 @@ function renderFoundOverview() {
     for (const group of groups) {
         const card = document.createElement('button');
         const heading = document.createElement('span');
+        const project = document.createElement('span');
         const title = document.createElement('strong');
         const filename = document.createElement('span');
         const metadata = document.createElement('span');
@@ -186,6 +197,8 @@ function renderFoundOverview() {
         card.className = 'found-document';
         card.setAttribute('aria-label', `${group.title} ansehen`);
         heading.className = 'found-document-heading';
+        project.className = 'found-document-project';
+        project.textContent = group.project;
         title.textContent = group.title;
         filename.textContent = group.file;
         metadata.className = 'found-document-metadata';
@@ -193,7 +206,7 @@ function renderFoundOverview() {
             `${group.problems.length} bestätigte${group.problems.length === 1 ? 'r Fund' : ' Funde'} · ${pageLabel}`;
         score.className = `found-document-score score-${group.severity}`;
         score.textContent = `Score ${group.maxScore}`;
-        heading.append(title, filename);
+        heading.append(project, title, filename);
         card.append(heading, metadata, score);
         card.addEventListener('click', () => {
             const targetIndex = state.filtered.findIndex(
@@ -204,7 +217,7 @@ function renderFoundOverview() {
 
             state.currentIndex = targetIndex;
             state.foundDetail = true;
-            renderProblem();
+            renderProblem({ preservePdf: state.pdfFile === group.file });
         });
         elements['found-documents'].append(card);
     }
@@ -241,6 +254,109 @@ function setPdfLoading(message = 'PDF-Seite wird geladen …') {
     elements['pdf-loading'].hidden = false;
 }
 
+function parseCoordinateBox(value) {
+    const trimmed = value.trim();
+
+    if (!trimmed) return null;
+
+    try {
+        const parsed = trimmed.startsWith('[') ? JSON.parse(trimmed) : trimmed.split(',').map(item => item.trim());
+
+        if (!Array.isArray(parsed) || parsed.length !== 4) return null;
+
+        const coordinates = parsed.map(Number);
+
+        if (!coordinates.every(Number.isFinite)) return null;
+
+        const [x0, y0, x1, y1] = coordinates;
+
+        if (x0 === x1 || y0 === y1) return null;
+
+        return coordinates;
+    } catch {
+        return null;
+    }
+}
+
+function renderCoordinateBox(pageElement) {
+    const overlay = pageElement?.querySelector('.pdf-coordinate-overlay');
+
+    if (!overlay) return;
+
+    overlay.replaceChildren();
+
+    if (!state.coordinateBox || Number(pageElement.dataset.page) !== state.coordinateBox.page) return;
+
+    const coordinateWidth = Number(pageElement.dataset.coordinateWidth);
+    const coordinateHeight = Number(pageElement.dataset.coordinateHeight);
+
+    if (!coordinateWidth || !coordinateHeight) return;
+
+    const [firstX, firstY, secondX, secondY] = state.coordinateBox.coordinates;
+    const x0 = Math.min(firstX, secondX);
+    const y0 = Math.min(firstY, secondY);
+    const x1 = Math.max(firstX, secondX);
+    const y1 = Math.max(firstY, secondY);
+
+    if (x0 < 0 || y0 < 0 || x1 > coordinateWidth || y1 > coordinateHeight) {
+        elements['coordinate-input'].setCustomValidity(
+            `Die Koordinaten müssen innerhalb von 0–${coordinateWidth.toFixed(2)} × 0–${coordinateHeight.toFixed(2)} liegen.`,
+        );
+        elements['coordinate-input'].reportValidity();
+        return;
+    }
+
+    elements['coordinate-input'].setCustomValidity('');
+
+    const box = document.createElement('div');
+    box.className = 'pdf-coordinate-box';
+    box.style.left = `${(x0 / coordinateWidth) * 100}%`;
+    box.style.top = `${(y0 / coordinateHeight) * 100}%`;
+    box.style.width = `${((x1 - x0) / coordinateWidth) * 100}%`;
+    box.style.height = `${((y1 - y0) / coordinateHeight) * 100}%`;
+    box.setAttribute('aria-hidden', 'true');
+    overlay.append(box);
+}
+
+function clearCoordinateBox({ clearInput = true } = {}) {
+    state.coordinateBox = null;
+
+    for (const pageElement of elements['pdf-pages'].children) {
+        renderCoordinateBox(pageElement);
+    }
+
+    if (clearInput) elements['coordinate-input'].value = '';
+    elements['coordinate-input'].setCustomValidity('');
+    elements['coordinate-clear'].disabled = true;
+}
+
+function drawCoordinateBox() {
+    const coordinates = parseCoordinateBox(elements['coordinate-input'].value);
+
+    if (!coordinates) {
+        elements['coordinate-input'].setCustomValidity('Bitte vier Zahlen eingeben, zum Beispiel [51.02, 373.88, 140.66, 388.13].');
+        elements['coordinate-input'].reportValidity();
+        return;
+    }
+
+    if (!state.pdfFile || !state.pdfPage) {
+        elements['coordinate-input'].setCustomValidity('Zuerst ein PDF und eine Seite auswählen.');
+        elements['coordinate-input'].reportValidity();
+        return;
+    }
+
+    elements['coordinate-input'].setCustomValidity('');
+    state.coordinateBox = {
+        page: state.pdfPage,
+        coordinates,
+    };
+    elements['coordinate-clear'].disabled = false;
+
+    const pageElement = elements['pdf-pages'].querySelector(`[data-page="${state.pdfPage}"]`);
+    loadPdfPage(pageElement);
+    renderCoordinateBox(pageElement);
+}
+
 function fitPdfTextLayer(pageElement) {
     const layer = pageElement?.querySelector('.pdf-text-layer');
     const sourceWidth = Number(layer?.dataset.sourceWidth);
@@ -256,7 +372,7 @@ async function loadPdfTextLayer(pageElement, pageNumber, requestId) {
     try {
         const response = await fetch(
             `/api/pdf-text-layer?filename=${encodeURIComponent(state.pdfFile)}` +
-                `&page=${pageNumber}&width=1800&request=${requestId}-${pageNumber}`,
+                `&page=${pageNumber}&width=${PDF_RENDER_WIDTH}&schema=2`,
         );
         const payload = await response.json();
 
@@ -272,6 +388,8 @@ async function loadPdfTextLayer(pageElement, pageNumber, requestId) {
 
         layer.dataset.sourceWidth = String(payload.width);
         layer.dataset.sourceHeight = String(payload.height);
+        pageElement.dataset.coordinateWidth = String(payload.coordinate_width);
+        pageElement.dataset.coordinateHeight = String(payload.coordinate_height);
         layer.style.width = `${payload.width}px`;
         layer.style.height = `${payload.height}px`;
 
@@ -304,6 +422,7 @@ async function loadPdfTextLayer(pageElement, pageNumber, requestId) {
         layer.replaceChildren(fragment);
         layer.hidden = false;
         fitPdfTextLayer(pageElement);
+        renderCoordinateBox(pageElement);
     } catch (error) {
         if (requestId === state.pdfLoadRequest) {
             layer.dataset.error = error.message;
@@ -390,6 +509,26 @@ function renderDocumentFindings(problem) {
     }
 }
 
+function startPdfPageObserver(requestId) {
+    if (requestId !== state.pdfLoadRequest || state.pdfObserver || !('IntersectionObserver' in window)) return;
+
+    state.pdfObserver = new IntersectionObserver(
+        entries => {
+            for (const entry of entries) {
+                if (entry.isIntersecting) loadPdfPage(entry.target);
+            }
+        },
+        {
+            root: elements['pdf-scroll'],
+            rootMargin: '400px 0px',
+        },
+    );
+
+    for (const pageElement of elements['pdf-pages'].children) {
+        state.pdfObserver.observe(pageElement);
+    }
+}
+
 function loadPdfPage(pageElement) {
     if (!state.pdfFile || !pageElement || pageElement.dataset.requested === 'true') return;
 
@@ -397,6 +536,12 @@ function loadPdfPage(pageElement) {
     const status = pageElement.querySelector('.pdf-page-status');
     const pageNumber = Number(pageElement.dataset.page);
     const requestId = state.pdfLoadRequest;
+    const requestTextLayer = () => {
+        if (pageElement.dataset.textRequested === 'true') return;
+
+        pageElement.dataset.textRequested = 'true';
+        loadPdfTextLayer(pageElement, pageNumber, requestId);
+    };
 
     pageElement.dataset.requested = 'true';
     status.textContent = `Seite ${pageNumber} wird geladen …`;
@@ -407,20 +552,26 @@ function loadPdfPage(pageElement) {
         image.hidden = false;
         status.hidden = true;
         fitPdfTextLayer(pageElement);
+        requestTextLayer();
 
         if (pageNumber === state.pdfPage) {
             elements['pdf-loading'].hidden = true;
+            startPdfPageObserver(requestId);
         }
     };
     image.onerror = () => {
         if (requestId !== state.pdfLoadRequest) return;
 
         status.textContent = `Seite ${pageNumber} konnte nicht dargestellt werden.`;
+        requestTextLayer();
+
+        if (pageNumber === state.pdfPage) {
+            startPdfPageObserver(requestId);
+        }
     };
     image.src =
         `/api/pdf-page?filename=${encodeURIComponent(state.pdfFile)}` +
-        `&page=${pageNumber}&width=1800&request=${requestId}-${pageNumber}`;
-    loadPdfTextLayer(pageElement, pageNumber, requestId);
+        `&page=${pageNumber}&width=${PDF_RENDER_WIDTH}`;
 }
 
 function renderPdfDocument() {
@@ -430,6 +581,7 @@ function renderPdfDocument() {
     const fragment = document.createDocumentFragment();
 
     state.pdfObserver?.disconnect();
+    state.pdfObserver = null;
     state.pdfResizeObserver?.disconnect();
     elements['pdf-pages'].replaceChildren();
     elements['pdf-pages'].style.setProperty('--pdf-zoom', state.pdfZoom);
@@ -441,6 +593,7 @@ function renderPdfDocument() {
         const pageLabel = document.createElement('span');
         const image = document.createElement('img');
         const textLayer = document.createElement('div');
+        const coordinateOverlay = document.createElement('div');
         const status = document.createElement('span');
 
         pageElement.className = 'pdf-page';
@@ -454,35 +607,15 @@ function renderPdfDocument() {
         textLayer.className = 'pdf-text-layer';
         textLayer.hidden = true;
         textLayer.setAttribute('aria-label', `Auswählbarer Text auf PDF-Seite ${pageNumber}`);
+        coordinateOverlay.className = 'pdf-coordinate-overlay';
+        coordinateOverlay.setAttribute('aria-hidden', 'true');
         status.className = 'pdf-page-status';
         status.textContent = `Seite ${pageNumber}`;
-        pageElement.append(pageLabel, image, textLayer, status);
+        pageElement.append(pageLabel, image, textLayer, coordinateOverlay, status);
         fragment.append(pageElement);
     }
 
     elements['pdf-pages'].append(fragment);
-
-    if ('IntersectionObserver' in window) {
-        state.pdfObserver = new IntersectionObserver(
-            entries => {
-                for (const entry of entries) {
-                    if (entry.isIntersecting) loadPdfPage(entry.target);
-                }
-            },
-            {
-                root: elements['pdf-scroll'],
-                rootMargin: '1000px 0px',
-            },
-        );
-
-        for (const pageElement of elements['pdf-pages'].children) {
-            state.pdfObserver.observe(pageElement);
-        }
-    } else {
-        for (const pageElement of elements['pdf-pages'].children) {
-            loadPdfPage(pageElement);
-        }
-    }
 
     if ('ResizeObserver' in window) {
         state.pdfResizeObserver = new ResizeObserver(entries => {
@@ -498,6 +631,7 @@ function renderPdfDocument() {
 
     const target = elements['pdf-pages'].querySelector(`[data-page="${state.pdfPage}"]`);
 
+    elements['pdf-scroll'].scrollTop = Math.max(0, (target?.offsetTop || 0) - 16);
     loadPdfPage(target);
     window.requestAnimationFrame(() => {
         if (requestId !== state.pdfLoadRequest || !target) return;
@@ -513,6 +647,7 @@ function loadPdf(problem) {
     state.pdfPageCount = Number.isInteger(problem.page_count) && problem.page_count > 0 ? problem.page_count : targetPage;
     state.pdfPage = Math.min(targetPage, state.pdfPageCount);
     state.pdfZoom = 1;
+    clearCoordinateBox();
     renderPdfDocument();
 }
 
@@ -603,14 +738,18 @@ function formatRecoveredText(payload) {
         .join('\n\n');
 }
 
-async function renderRecoveredText(problem) {
-    const requestId = ++state.recoveryRequest;
-    const cached = state.recoveredText.get(problem.problem_id);
-
+function resetRecoveredText() {
     elements['recovered-text'].hidden = true;
     elements['recovered-text'].textContent = '';
     elements['recovered-status'].hidden = false;
     elements['recovered-status'].textContent = 'Text wird lokal aus der markierten PDF-Region gelesen …';
+}
+
+async function renderRecoveredText(problem) {
+    const requestId = ++state.recoveryRequest;
+    const cached = state.recoveredText.get(problem.problem_id);
+
+    resetRecoveredText();
 
     try {
         let payload = cached;
@@ -672,6 +811,7 @@ function renderProblem({ preservePdf = false } = {}) {
                   : '<strong>Keine offenen Fälle in diesem Filter</strong><p>Wähle einen anderen Filter oder prüfe den Datenbestand.</p>';
         elements['empty-viewer'].hidden = false;
         elements['empty-viewer'].innerHTML = '<p>Kein PDF ausgewählt.</p>';
+        clearCoordinateBox();
         state.pdfObserver?.disconnect();
         elements['pdf-pages'].replaceChildren();
         elements['pdf-loading'].hidden = true;
@@ -692,6 +832,7 @@ function renderProblem({ preservePdf = false } = {}) {
     elements['document-title'].textContent = problem.title || 'Ohne Titel';
     elements['filename'].textContent = problem.file;
     elements['document-id'].textContent = problem.document_id;
+    elements['project-name'].textContent = problem.project || 'Ohne Projekt';
     elements.page.textContent = problem.page ?? 'Dokumentweit';
     elements['problem-type'].textContent = problem.type;
     elements['risk-score'].textContent = problem.risk_score;
@@ -702,7 +843,6 @@ function renderProblem({ preservePdf = false } = {}) {
     renderDocumentFindings(problem);
 
     renderDecision(problem);
-    renderRecoveredText(problem);
 
     if (preservePdf && state.pdfFile === problem.file) {
         if (Number.isInteger(problem.page) && problem.page > 0) {
@@ -712,11 +852,19 @@ function renderProblem({ preservePdf = false } = {}) {
         loadPdf(problem);
     }
 
+    state.recoveryRequest++;
+    resetRecoveredText();
+    window.setTimeout(() => {
+        if (currentProblem()?.problem_id === problem.problem_id) {
+            renderRecoveredText(problem);
+        }
+    }, 100);
     updateViewerPageFindingSummary();
     setBusy(false);
 }
 
 function applyFilters({ preserveProblemId = null } = {}) {
+    const previousPdfFile = state.pdfFile;
     const severity = elements['severity-filter'].value;
     const type = elements['type-filter'].value;
 
@@ -737,7 +885,7 @@ function applyFilters({ preserveProblemId = null } = {}) {
         renderFoundOverview();
     } else {
         state.currentIndex = nextIndex >= 0 ? nextIndex : state.filtered.length ? 0 : -1;
-        renderProblem();
+        renderProblem({ preservePdf: currentProblem()?.file === previousPdfFile });
     }
 }
 
@@ -766,7 +914,7 @@ function move(direction) {
 
     state.currentIndex = Math.min(Math.max(state.currentIndex + direction, 0), state.filtered.length - 1);
     setMessage('');
-    renderProblem();
+    renderProblem({ preservePdf: currentProblem()?.file === state.pdfFile });
 }
 
 function removeReviewedAndAdvance(problemId) {
@@ -774,7 +922,7 @@ function removeReviewedAndAdvance(problemId) {
 
     state.filtered = state.filtered.filter(problem => problem.problem_id !== problemId);
     state.currentIndex = state.filtered.length ? Math.min(Math.max(previousIndex, 0), state.filtered.length - 1) : -1;
-    renderProblem();
+    renderProblem({ preservePdf: currentProblem()?.file === state.pdfFile });
 
     if (state.filtered.length === 0) {
         setMessage('Alle Fälle in diesem Filter wurden geprüft.', 'success');
@@ -853,6 +1001,12 @@ elements['pdf-page-next'].addEventListener('click', () => changePdfPage(state.pd
 elements['pdf-page-number'].addEventListener('change', event => changePdfPage(event.target.value));
 elements['pdf-zoom-out'].addEventListener('click', () => changePdfZoom(-0.25));
 elements['pdf-zoom-in'].addEventListener('click', () => changePdfZoom(0.25));
+elements['coordinate-form'].addEventListener('submit', event => {
+    event.preventDefault();
+    drawCoordinateBox();
+});
+elements['coordinate-clear'].addEventListener('click', () => clearCoordinateBox());
+elements['coordinate-input'].addEventListener('input', () => elements['coordinate-input'].setCustomValidity(''));
 elements['pdf-scroll'].addEventListener('scroll', () => {
     if (state.pdfScrollFrame !== null) return;
 

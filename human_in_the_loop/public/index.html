@@ -5,8 +5,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="color-scheme" content="light" />
         <title>Redaction Review Desk</title>
-        <link rel="stylesheet" href="/style.css?v=20260819-8" />
-        <script src="/app.js?v=20260819-8" defer></script>
+        <link rel="stylesheet" href="/style.css?v=20260819-11" />
+        <script src="/app.js?v=20260819-11" defer></script>
     </head>
     <body>
         <header class="topbar">
@@ -85,6 +85,23 @@
                         <span id="pdf-zoom-label">100%</span>
                         <button id="pdf-zoom-in" type="button" title="Vergrößern">+</button>
                     </div>
+                    <form id="coordinate-form" class="coordinate-controls" aria-label="Koordinaten markieren">
+                        <label class="visually-hidden" for="coordinate-input">Forensic-Koordinaten</label>
+                        <input
+                            id="coordinate-input"
+                            type="text"
+                            inputmode="decimal"
+                            autocomplete="off"
+                            spellcheck="false"
+                            placeholder="[x1, y1, x2, y2]"
+                            aria-describedby="coordinate-help"
+                        />
+                        <button type="submit" title="Box auf der aktuellen PDF-Seite zeichnen">Box</button>
+                        <button id="coordinate-clear" type="button" title="Box entfernen" disabled>×</button>
+                        <span id="coordinate-help" class="visually-hidden">
+                            Koordinaten aus den Forensic-Daten. Die Box wird auf der aktuellen PDF-Seite gezeichnet.
+                        </span>
+                    </form>
                     <a id="open-pdf" href="#" target="_blank" rel="noopener" hidden>In neuem Tab öffnen</a>
                 </div>
                 <div id="pdf-scroll" class="pdf-scroll" tabindex="0" aria-label="Scrollbarer PDF-Bereich">
@@ -121,6 +138,10 @@
                         <div>
                             <dt>ID</dt>
                             <dd id="document-id">–</dd>
+                        </div>
+                        <div id="project-detail" hidden>
+                            <dt>Projekt</dt>
+                            <dd id="project-name">–</dd>
                         </div>
                         <div>
                             <dt>Seite</dt>

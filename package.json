@@ -1,5 +1,5 @@
 {
-    "name": "MaskCheck",
+    "name": "RedactionResearch",
     "version": "0.1.0",
     "description": "start to collect ~3k redacted pdf links from fragDenStaat (14.08.2026)",
     "homepage": "https://github.com/oliverjessner/RedactionResearch#readme",
@@ -13,9 +13,14 @@
     "license": "ISC",
     "author": "",
     "type": "commonjs",
+    "engines": {
+        "node": ">=22.5.0"
+    },
     "main": "discovery.js",
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1"
+        "migrate:forensic": "node migrate-forensic-to-sqlite.mjs",
+        "migrate:pdfs": "node migrate-pdfs-to-project-directory.mjs",
+        "test": "node --test test/*.test.js human_in_the_loop/test/*.test.js"
     },
     "dependencies": {
         "@napi-rs/canvas": "^1.0.6",

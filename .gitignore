@@ -1,4 +1,5 @@
 output/download/pdfs
+output/forensic
 node_modules/
 temp/
 dist/
@@ -15,5 +16,6 @@ src-tauri/gen/
 client_secret.json
 *.db
 *.sqlite
+!output/forensic/forensic.sqlite
 *.sqlite-shm
 *.sqlite-wal

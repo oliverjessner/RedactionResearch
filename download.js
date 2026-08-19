@@ -6,7 +6,7 @@ const crypto = require('node:crypto');
 const OUTPUT_DIR = path.join(__dirname, 'output');
 const DISCOVERY_DIR = path.join(OUTPUT_DIR, 'discovery');
 const DOWNLOAD_DIR = path.join(OUTPUT_DIR, 'download');
-const PDF_DIR = path.join(DOWNLOAD_DIR, 'pdfs');
+const PDF_ROOT = path.join(DOWNLOAD_DIR, 'pdfs');
 
 const CANDIDATES_FILE = path.join(DISCOVERY_DIR, 'candidates.json');
 
@@ -18,6 +18,7 @@ const PROGRESS_FILE = path.join(DOWNLOAD_DIR, 'download-progress.json');
 
 const DEFAULT_DELAY_MS = 300;
 const DEFAULT_CONCURRENCY = 2;
+const DEFAULT_PROJECT_ID = 1;
 
 const REQUEST_TIMEOUT_MS = 60_000;
 const MAX_ATTEMPTS = 6;
@@ -37,6 +38,7 @@ function parseArgs() {
         documentId: null,
         delay: DEFAULT_DELAY_MS,
         concurrency: DEFAULT_CONCURRENCY,
+        projectId: Number(process.env.DOWNLOAD_PROJECT_ID || DEFAULT_PROJECT_ID),
     };
 
     for (let i = 0; i < args.length; i++) {
@@ -63,6 +65,10 @@ function parseArgs() {
                 options.concurrency = Number(args[++i]);
                 break;
 
+            case '--project-id':
+                options.projectId = Number(args[++i]);
+                break;
+
             case '--help':
                 printHelp();
                 process.exit(0);
@@ -84,6 +90,10 @@ function parseArgs() {
 
     if (!Number.isFinite(options.delay) || options.delay < 0) {
         throw new Error('--delay must be a non-negative number');
+    }
+
+    if (!Number.isInteger(options.projectId) || options.projectId <= 0) {
+        throw new Error('--project-id must be a positive integer');
     }
 
     return options;
@@ -116,6 +126,10 @@ Options:
       Number of simultaneous downloads.
       Default: ${DEFAULT_CONCURRENCY}
 
+  --project-id ID
+      Store PDFs below output/download/pdfs/ID/.
+      Default: ${DEFAULT_PROJECT_ID}
+
 Examples:
 
   node download.js --limit 100
@@ -126,8 +140,12 @@ Examples:
 `);
 }
 
-async function ensureDirectories() {
-    await fsp.mkdir(PDF_DIR, {
+function getProjectPdfDirectory(projectId) {
+    return path.join(PDF_ROOT, String(projectId));
+}
+
+async function ensureDirectories(projectId) {
+    await fsp.mkdir(getProjectPdfDirectory(projectId), {
         recursive: true,
     });
 }
@@ -188,8 +206,12 @@ function getFileUrl(candidate) {
     return candidate.file_url ?? candidate.fileUrl ?? null;
 }
 
-function getPdfPath(documentId) {
-    return path.join(PDF_DIR, `${documentId}.pdf`);
+function projectDocumentKey(projectId, documentId) {
+    return `${projectId}:${documentId}`;
+}
+
+function getPdfPath(documentId, projectId) {
+    return path.join(getProjectPdfDirectory(projectId), `${documentId}.pdf`);
 }
 
 async function fileExists(file) {
@@ -316,7 +338,7 @@ async function downloadCandidate({ candidate, index, total, options }) {
 
     const fileUrl = getFileUrl(candidate);
 
-    const pdfPath = getPdfPath(documentId);
+    const pdfPath = getPdfPath(documentId, options.projectId);
 
     console.log(`[${index + 1}/${total}] ${documentId}`);
 
@@ -335,6 +357,7 @@ async function downloadCandidate({ candidate, index, total, options }) {
 
         return {
             document_id: documentId,
+            project_id: options.projectId,
             status: 'existing',
 
             title: candidate.title ?? null,
@@ -374,6 +397,7 @@ async function downloadCandidate({ candidate, index, total, options }) {
 
     return {
         document_id: documentId,
+        project_id: options.projectId,
         status: exists ? 'redownloaded' : 'downloaded',
 
         title: candidate.title ?? null,
@@ -442,7 +466,7 @@ async function runWorkerPool(items, worker, concurrency) {
 async function main() {
     const options = parseArgs();
 
-    await ensureDirectories();
+    await ensureDirectories(options.projectId);
 
     const candidates = await readJson(CANDIDATES_FILE);
 
@@ -475,7 +499,10 @@ async function main() {
 
     for (const result of previousResults) {
         if (result.document_id) {
-            resultsById.set(String(result.document_id), result);
+            resultsById.set(
+                projectDocumentKey(Number(result.project_id || DEFAULT_PROJECT_ID), String(result.document_id)),
+                result,
+            );
         }
     }
 
@@ -483,7 +510,10 @@ async function main() {
 
     for (const error of previousErrors) {
         if (error.document_id) {
-            errorsById.set(String(error.document_id), error);
+            errorsById.set(
+                projectDocumentKey(Number(error.project_id || DEFAULT_PROJECT_ID), String(error.document_id)),
+                error,
+            );
         }
     }
 
@@ -509,20 +539,27 @@ async function main() {
 
     console.log(`Force:       ${options.force}`);
 
+    console.log(`Project ID:  ${options.projectId}`);
+
     console.log('');
 
     let saveStateQueue = Promise.resolve();
 
     function saveState() {
-        const results = [...resultsById.values()].sort((a, b) =>
-            String(a.document_id).localeCompare(String(b.document_id), undefined, {
+        const results = [...resultsById.values()].sort((a, b) => {
+            const projectDifference = Number(a.project_id || DEFAULT_PROJECT_ID) - Number(b.project_id || DEFAULT_PROJECT_ID);
+
+            if (projectDifference !== 0) return projectDifference;
+
+            return String(a.document_id).localeCompare(String(b.document_id), undefined, {
                 numeric: true,
-            }),
-        );
+            });
+        });
 
         const errors = [...errorsById.values()];
 
         const progress = {
+            project_id: options.projectId,
             total: selected.length,
             processed,
             successful,
@@ -557,6 +594,7 @@ async function main() {
             const { candidate, originalIndex } = item;
 
             const documentId = sanitizeDocumentId(candidate, originalIndex);
+            const recordKey = projectDocumentKey(options.projectId, documentId);
 
             try {
                 const result = await downloadCandidate({
@@ -566,9 +604,9 @@ async function main() {
                     options,
                 });
 
-                resultsById.set(documentId, result);
+                resultsById.set(recordKey, result);
 
-                errorsById.delete(documentId);
+                errorsById.delete(recordKey);
 
                 processed++;
                 successful++;
@@ -588,8 +626,10 @@ async function main() {
 
                 console.error(`    ERROR: ${error.message}`);
 
-                errorsById.set(documentId, {
+                errorsById.set(recordKey, {
                     document_id: documentId,
+
+                    project_id: options.projectId,
 
                     title: candidate.title ?? null,
 
@@ -633,7 +673,7 @@ async function main() {
     console.log(`Data:       ${formatBytes(totalBytes)}`);
 
     console.log('');
-    console.log(`PDFs:     ${PDF_DIR}`);
+    console.log(`PDFs:     ${getProjectPdfDirectory(options.projectId)}`);
 
     console.log(`Results:  ${RESULTS_FILE}`);
 

@@ -1,24 +1,34 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import crypto from 'node:crypto';
+import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 
 import { AnnotationMode, Util, VerbosityLevel, getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const require = createRequire(import.meta.url);
+const {
+    DEFAULT_PROJECT,
+    countProblemDocuments,
+    ensureProject,
+    isDocumentScanCompleted,
+    openForensicDatabase,
+    recordDocumentScanError,
+    saveDocumentScanResult,
+    startScanRun,
+    updateScanRun,
+} = require('./lib/forensic-db.js');
 
 const OUTPUT_DIR = path.join(__dirname, 'output');
 const DISCOVERY_DIR = path.join(OUTPUT_DIR, 'discovery');
 const DOWNLOAD_DIR = path.join(OUTPUT_DIR, 'download');
-const PDF_DIR = path.join(DOWNLOAD_DIR, 'pdfs');
+const PDF_ROOT = path.join(DOWNLOAD_DIR, 'pdfs');
 const FORENSIC_DIR = path.join(OUTPUT_DIR, 'forensic');
 
 const CANDIDATES_FILE = path.join(DISCOVERY_DIR, 'candidates.json');
 
-const PROBLEMS_FILE = path.join(FORENSIC_DIR, 'redaction_problems.json');
-
-const PROGRESS_FILE = path.join(FORENSIC_DIR, 'redaction_scan_progress.json');
+const DATABASE_FILE = path.join(FORENSIC_DIR, 'forensic.sqlite');
 
 // ---------------------------------------------------------
 // PDF.js resources
@@ -93,6 +103,7 @@ function parseArgs() {
         scale: DEFAULT_SCALE,
         force: false,
         noRender: false,
+        project: process.env.FORENSIC_PROJECT || DEFAULT_PROJECT,
     };
 
     for (let i = 0; i < args.length; i++) {
@@ -121,6 +132,10 @@ function parseArgs() {
                 options.noRender = true;
                 break;
 
+            case '--project':
+                options.project = args[++i];
+                break;
+
             case '--help':
                 printHelp();
                 process.exit(0);
@@ -140,6 +155,10 @@ function parseArgs() {
 
     if (!Number.isFinite(options.scale) || options.scale <= 0 || options.scale > 4) {
         throw new Error('--scale must be > 0 and <= 4');
+    }
+
+    if (typeof options.project !== 'string' || !options.project.trim()) {
+        throw new Error('--project must be a non-empty string');
     }
 
     return options;
@@ -176,6 +195,10 @@ Options:
       Only structural checks.
       Skip pixel/rendering checks.
 
+  --project NAME
+      Project assigned to all scanned documents.
+      Default: ${DEFAULT_PROJECT}
+
 Examples:
 
   node forensic.mjs --limit 20
@@ -199,26 +222,6 @@ async function readJson(file, fallback) {
     } catch (error) {
         if (error.code === 'ENOENT') {
             return fallback;
-        }
-
-        throw error;
-    }
-}
-
-async function writeJsonAtomic(file, data) {
-    const tmp = `${file}.${process.pid}.${crypto.randomUUID()}.tmp`;
-
-    try {
-        await fs.writeFile(tmp, JSON.stringify(data, null, 2));
-
-        await fs.rename(tmp, file);
-    } catch (error) {
-        try {
-            await fs.unlink(tmp);
-        } catch (cleanupError) {
-            if (cleanupError.code !== 'ENOENT') {
-                error.cleanupError = cleanupError;
-            }
         }
 
         throw error;
@@ -1290,10 +1293,6 @@ async function scanDocument(pdfPath, candidate, options, onPageProgress = null) 
 
         .sort((a, b) => b.risk_score - a.risk_score);
 
-    if (filtered.length === 0) {
-        return null;
-    }
-
     return {
         file: fileName,
 
@@ -1307,7 +1306,7 @@ async function scanDocument(pdfPath, candidate, options, onPageProgress = null) 
 
         page_count: pageCount,
 
-        highest_risk_score: filtered[0].risk_score,
+        highest_risk_score: filtered[0]?.risk_score ?? null,
 
         problem_count: filtered.length,
 
@@ -1332,7 +1331,11 @@ async function main() {
         recursive: true,
     });
 
-    const entries = await fs.readdir(PDF_DIR, {
+    const database = openForensicDatabase(DATABASE_FILE);
+    const projectId = ensureProject(database, options.project);
+    const pdfDirectory = path.join(PDF_ROOT, String(projectId));
+
+    const entries = await fs.readdir(pdfDirectory, {
         withFileTypes: true,
     });
 
@@ -1369,25 +1372,6 @@ async function main() {
         Array.isArray(candidates) ? candidates.map(candidate => [String(candidate.document_id ?? ''), candidate]) : [],
     );
 
-    // -------------------------------------------------------
-    // Existing results
-    // -------------------------------------------------------
-
-    const existingProblems = await readJson(PROBLEMS_FILE, []);
-
-    const problemsByFile = new Map(
-        Array.isArray(existingProblems) ? existingProblems.map(item => [item.file, item]) : [],
-    );
-
-    const progress = await readJson(PROGRESS_FILE, {
-        completed: {},
-        errors: {},
-    });
-
-    progress.completed ||= {};
-
-    progress.errors ||= {};
-
     console.log('PDF Redaction Scanner');
 
     console.log('---------------------');
@@ -1400,122 +1384,140 @@ async function main() {
 
     console.log(`Render checks: ${options.noRender ? 'OFF' : 'ON'}`);
 
+    console.log(`Project:       ${options.project}`);
+
+    console.log(`Project ID:    ${projectId}`);
+
     console.log('');
 
     let processed = 0;
     let skipped = 0;
     let withProblems = 0;
+    const runId = startScanRun(database, options.project, {
+        selectedCount: pdfFiles.length,
+        minScore: options.minScore,
+        renderScale: options.scale,
+        renderChecks: !options.noRender,
+    });
 
-    // -------------------------------------------------------
-    // Scan
-    // -------------------------------------------------------
+    try {
+        // -------------------------------------------------------
+        // Scan
+        // -------------------------------------------------------
 
-    for (let i = 0; i < pdfFiles.length; i++) {
-        const fileName = pdfFiles[i];
+        for (let i = 0; i < pdfFiles.length; i++) {
+            const fileName = pdfFiles[i];
 
-        const pdfPath = path.join(PDF_DIR, fileName);
+            const pdfPath = path.join(pdfDirectory, fileName);
 
-        const documentId = path.basename(fileName, path.extname(fileName));
+            const documentId = path.basename(fileName, path.extname(fileName));
 
-        const candidate = candidateMap.get(documentId) || null;
+            const candidate = candidateMap.get(documentId) || null;
 
-        if (!options.force && progress.completed[fileName]) {
-            skipped++;
+            if (!options.force && isDocumentScanCompleted(database, options.project, fileName)) {
+                skipped++;
 
-            console.log(`[${i + 1}/${pdfFiles.length}] ${fileName} | SKIP already scanned`);
+                console.log(`[${i + 1}/${pdfFiles.length}] ${fileName} | SKIP already scanned`);
 
-            continue;
-        }
-
-        try {
-            const scanStartedAt = Date.now();
-
-            const result = await scanDocument(pdfPath, candidate, options, async ({ page, total }) => {
-                if (page === 0) {
-                    console.log(`[${i + 1}/${pdfFiles.length}] ${fileName} | SCAN large PDF (${total} pages)`);
-                    return;
-                }
-
-                console.log(
-                    `[${i + 1}/${pdfFiles.length}] ${fileName} | ` +
-                        `page ${page}/${total} | elapsed ${formatDuration(Date.now() - scanStartedAt)}`,
-                );
-            });
-
-            processed++;
-
-            delete progress.errors[fileName];
-
-            progress.completed[fileName] = new Date().toISOString();
-
-            if (result) {
-                problemsByFile.set(fileName, result);
-
-                withProblems++;
-
-                console.log(
-                    `[${i + 1}/${pdfFiles.length}] ${fileName} | ` +
-                        `PROBLEM ${result.highest_risk_score} | ` +
-                        `${result.problems[0].type}`,
-                );
-            } else {
-                problemsByFile.delete(fileName);
-
-                console.log(`[${i + 1}/${pdfFiles.length}] ${fileName} | ` + `clean / no score >= ${options.minScore}`);
+                continue;
             }
-        } catch (error) {
-            processed++;
 
-            progress.errors[fileName] = {
-                error: error?.message || String(error),
+            try {
+                const scanStartedAt = Date.now();
 
-                at: new Date().toISOString(),
-            };
+                const result = await scanDocument(pdfPath, candidate, options, async ({ page, total }) => {
+                    if (page === 0) {
+                        console.log(`[${i + 1}/${pdfFiles.length}] ${fileName} | SCAN large PDF (${total} pages)`);
+                        return;
+                    }
 
-            console.error(`[${i + 1}/${pdfFiles.length}] ${fileName} | ` + `ERROR ${error?.message || error}`);
+                    console.log(
+                        `[${i + 1}/${pdfFiles.length}] ${fileName} | ` +
+                            `page ${page}/${total} | elapsed ${formatDuration(Date.now() - scanStartedAt)}`,
+                    );
+                });
+
+                processed++;
+                saveDocumentScanResult(database, options.project, result);
+
+                if (result.problem_count > 0) {
+                    withProblems++;
+
+                    console.log(
+                        `[${i + 1}/${pdfFiles.length}] ${fileName} | ` +
+                            `PROBLEM ${result.highest_risk_score} | ` +
+                            `${result.problems[0].type}`,
+                    );
+                } else {
+                    console.log(`[${i + 1}/${pdfFiles.length}] ${fileName} | ` + `clean / no score >= ${options.minScore}`);
+                }
+            } catch (error) {
+                processed++;
+
+                recordDocumentScanError(
+                    database,
+                    options.project,
+                    {
+                        file: fileName,
+                        document_id: documentId,
+                        title: candidate?.title || null,
+                        source_url: candidate?.site_url || candidate?.document_url || null,
+                        file_url: candidate?.file_url || null,
+                    },
+                    error,
+                );
+
+                console.error(`[${i + 1}/${pdfFiles.length}] ${fileName} | ` + `ERROR ${error?.message || error}`);
+            }
+
+            updateScanRun(database, runId, {
+                processed,
+                skipped,
+                problemDocumentsTotal: countProblemDocuments(database, options.project),
+            });
         }
 
-        progress.updated_at = new Date().toISOString();
+        const problemDocumentsTotal = countProblemDocuments(database, options.project);
 
-        progress.selected = pdfFiles.length;
+        updateScanRun(
+            database,
+            runId,
+            { processed, skipped, problemDocumentsTotal },
+            { complete: true },
+        );
 
-        progress.processed_this_run = processed;
+        console.log('');
 
-        progress.skipped_this_run = skipped;
+        console.log('==============================');
 
-        progress.problem_documents_total = problemsByFile.size;
+        console.log('SCAN COMPLETE');
 
-        // Save after EVERY PDF so we don't lose work.
-        const output = [...problemsByFile.values()].sort((a, b) => b.highest_risk_score - a.highest_risk_score);
+        console.log('==============================');
 
-        await writeJsonAtomic(PROBLEMS_FILE, output);
+        console.log(`Processed this run: ${processed}`);
 
-        await writeJsonAtomic(PROGRESS_FILE, progress);
+        console.log(`Skipped:            ${skipped}`);
+
+        console.log(`Problems this run:  ${withProblems}`);
+
+        console.log(`Problem PDFs total: ${problemDocumentsTotal}`);
+
+        console.log(`Database: ${DATABASE_FILE}`);
+    } catch (error) {
+        updateScanRun(
+            database,
+            runId,
+            {
+                processed,
+                skipped,
+                problemDocumentsTotal: countProblemDocuments(database, options.project),
+            },
+            { failed: true },
+        );
+        throw error;
+    } finally {
+        database.close();
     }
-
-    const finalOutput = [...problemsByFile.values()].sort((a, b) => b.highest_risk_score - a.highest_risk_score);
-
-    await writeJsonAtomic(PROBLEMS_FILE, finalOutput);
-
-    await writeJsonAtomic(PROGRESS_FILE, progress);
-
-    console.log('');
-
-    console.log('==============================');
-
-    console.log('SCAN COMPLETE');
-
-    console.log('==============================');
-
-    console.log(`Processed this run: ${processed}`);
-
-    console.log(`Skipped:            ${skipped}`);
-
-    console.log(`Problems this run:  ${withProblems}`);
-
-    console.log(`Problem PDFs total: ${finalOutput.length}`);
-
-    console.log(`Output: ${PROBLEMS_FILE}`);
 }
 
 main().catch(error => {
