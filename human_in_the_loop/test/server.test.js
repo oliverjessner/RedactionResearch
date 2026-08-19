@@ -60,15 +60,27 @@ test('API safely serves, reviews, and persists flattened problems', async () => 
         const baseUrl = `http://127.0.0.1:${port}`;
         const appResponse = await fetch(`${baseUrl}/`);
         const appMarkup = await appResponse.text();
-        const appScript = await (await fetch(`${baseUrl}/app.js?v=20260818-7`)).text();
+        const appScript = await (await fetch(`${baseUrl}/app.js?v=20260819-8`)).text();
 
         assert.equal(appResponse.status, 200);
         assert.match(appMarkup, /id="pdf-scroll"/);
         assert.match(appMarkup, /id="pdf-pages"/);
         assert.match(appMarkup, /id="document-findings"/);
-        assert.match(appMarkup, /PDFs offen/);
+        assert.match(appMarkup, /PDFs mit Problemen/);
+        assert.doesNotMatch(appMarkup, /Funde offen/);
+        assert.doesNotMatch(appMarkup, /problem-counter/);
+        assert.doesNotMatch(appMarkup, /document-findings-summary/);
+        assert.doesNotMatch(appMarkup, /source-section/);
+        assert.match(appScript, /renderProblem\(\{ preservePdf:/);
+        assert.match(appMarkup, /id="view-investigate"/);
+        assert.match(appMarkup, /id="view-found"/);
+        assert.match(appMarkup, /id="found-overview"/);
+        assert.match(appMarkup, /id="found-documents"/);
+        assert.match(appMarkup, /id="found-back"/);
+        assert.match(appScript, /decision === 'accepted'/);
+        assert.match(appScript, /function foundDocumentGroups\(\)/);
         assert.equal(appScript.includes("addEventListener('wheel'"), false);
-        assert.match(appScript, /const isUnreviewed = !state\.reviewed\[problem\.problem_id\]/);
+        assert.match(appScript, /const viewMatches = problemMatchesView\(problem\)/);
 
         const problemsResponse = await fetch(`${baseUrl}/api/problems`);
         const problemsPayload = await problemsResponse.json();
@@ -81,6 +93,9 @@ test('API safely serves, reviews, and persists flattened problems', async () => 
 
         const invalidPageResponse = await fetch(`${baseUrl}/api/pdf-page?filename=123.pdf&page=0`);
         assert.equal(invalidPageResponse.status, 400);
+
+        const invalidTextLayerResponse = await fetch(`${baseUrl}/api/pdf-text-layer?filename=123.pdf&page=0`);
+        assert.equal(invalidTextLayerResponse.status, 400);
 
         const noPageResponse = await fetch(
             `${baseUrl}/api/recovered-text?problem_id=${encodeURIComponent(problemsPayload.problems[1].problem_id)}`,

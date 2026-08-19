@@ -1,4 +1,6 @@
 const state = {
+    view: 'investigate',
+    foundDetail: false,
     problems: [],
     filtered: [],
     reviewed: {},
@@ -12,6 +14,7 @@ const state = {
     pdfPageCount: 0,
     pdfZoom: 1,
     pdfObserver: null,
+    pdfResizeObserver: null,
     pdfScrollFrame: null,
 };
 
@@ -23,15 +26,17 @@ const elements = Object.fromEntries(
         'decision-badge',
         'document-id',
         'document-findings',
-        'document-findings-summary',
         'document-title',
         'empty-viewer',
         'evidence',
         'filename',
+        'found-back',
+        'found-documents',
+        'found-empty',
+        'found-overview',
+        'found-overview-summary',
         'message',
         'next',
-        'no-source',
-        'open-documents-count',
         'open-pdf',
         'page',
         'pdf-loading',
@@ -45,29 +50,37 @@ const elements = Object.fromEntries(
         'pdf-zoom-label',
         'pdf-zoom-out',
         'previous',
-        'problem-counter',
+        'problem-documents-count',
         'problem-type',
-        'progress-fill',
-        'remaining-count',
         'recovered-status',
         'recovered-text',
         'review-content',
         'review-empty',
-        'review-position',
+        'review-actions',
+        'review-panel',
         'risk-score',
         'severity',
         'severity-filter',
         'skip',
         'skipped-count',
-        'source-url',
         'type-filter',
         'viewer-label',
         'viewer-page-findings',
+        'view-found',
+        'view-investigate',
+        'viewer-panel',
+        'workspace',
     ].map(id => [id, document.getElementById(id)]),
 );
 
 function currentProblem() {
     return state.filtered[state.currentIndex] || null;
+}
+
+function problemMatchesView(problem) {
+    const decision = state.reviewed[problem.problem_id];
+
+    return state.view === 'found' ? decision === 'accepted' : !decision;
 }
 
 function reviewCounts() {
@@ -80,7 +93,7 @@ function reviewCounts() {
         accepted,
         skipped,
         remaining: openProblems.length,
-        openDocuments: new Set(openProblems.map(problem => problem.document_id)).size,
+        totalDocuments: new Set(state.problems.map(problem => problem.document_id)).size,
     };
 }
 
@@ -95,6 +108,115 @@ function setBusy(busy) {
     for (const id of ['accept', 'skip', 'previous', 'next']) {
         elements[id].disabled = busy || state.filtered.length === 0;
     }
+}
+
+function renderViewControls() {
+    const foundView = state.view === 'found';
+    const foundOverview = foundView && !state.foundDetail;
+
+    elements['view-investigate'].classList.toggle('active', !foundView);
+    elements['view-investigate'].setAttribute('aria-selected', String(!foundView));
+    elements['view-found'].classList.toggle('active', foundView);
+    elements['view-found'].setAttribute('aria-selected', String(foundView));
+    elements.accept.hidden = foundView;
+    elements.skip.hidden = foundView;
+    elements['found-back'].hidden = !foundView || foundOverview;
+    elements['found-overview'].hidden = !foundOverview;
+    elements['viewer-panel'].hidden = foundOverview;
+    elements['review-panel'].hidden = foundOverview;
+    elements['review-actions'].classList.toggle('found-view', foundView);
+}
+
+function foundDocumentGroups() {
+    const groups = new Map();
+
+    for (const problem of state.filtered) {
+        const key = `${problem.document_id}\u0000${problem.file}`;
+        const existing = groups.get(key);
+
+        if (existing) {
+            existing.problems.push(problem);
+            if (problem.risk_score > existing.maxScore) {
+                existing.maxScore = problem.risk_score;
+                existing.severity = problem.severity;
+            }
+        } else {
+            groups.set(key, {
+                documentId: problem.document_id,
+                file: problem.file,
+                title: problem.title || 'Ohne Titel',
+                maxScore: problem.risk_score,
+                severity: problem.severity,
+                problems: [problem],
+            });
+        }
+    }
+
+    return [...groups.values()].sort(
+        (a, b) => b.maxScore - a.maxScore || a.file.localeCompare(b.file, 'de'),
+    );
+}
+
+function renderFoundOverview() {
+    const groups = foundDocumentGroups();
+
+    renderViewControls();
+    renderProgress();
+    elements['found-documents'].replaceChildren();
+    elements['found-overview-summary'].textContent =
+        `${groups.length} Dokument${groups.length === 1 ? '' : 'e'} · ` +
+        `${state.filtered.length} bestätigte${state.filtered.length === 1 ? 'r Fund' : ' Funde'}`;
+    elements['found-empty'].hidden = groups.length > 0;
+
+    for (const group of groups) {
+        const card = document.createElement('button');
+        const heading = document.createElement('span');
+        const title = document.createElement('strong');
+        const filename = document.createElement('span');
+        const metadata = document.createElement('span');
+        const score = document.createElement('span');
+        const pages = [...new Set(group.problems.map(problem => problem.page).filter(Number.isInteger))].sort(
+            (a, b) => a - b,
+        );
+        const pageLabel = pages.length
+            ? `Seite${pages.length === 1 ? '' : 'n'} ${pages.join(', ')}`
+            : 'Dokumentweiter Fund';
+
+        card.type = 'button';
+        card.className = 'found-document';
+        card.setAttribute('aria-label', `${group.title} ansehen`);
+        heading.className = 'found-document-heading';
+        title.textContent = group.title;
+        filename.textContent = group.file;
+        metadata.className = 'found-document-metadata';
+        metadata.textContent =
+            `${group.problems.length} bestätigte${group.problems.length === 1 ? 'r Fund' : ' Funde'} · ${pageLabel}`;
+        score.className = `found-document-score score-${group.severity}`;
+        score.textContent = `Score ${group.maxScore}`;
+        heading.append(title, filename);
+        card.append(heading, metadata, score);
+        card.addEventListener('click', () => {
+            const targetIndex = state.filtered.findIndex(
+                problem => problem.problem_id === group.problems[0].problem_id,
+            );
+
+            if (targetIndex < 0) return;
+
+            state.currentIndex = targetIndex;
+            state.foundDetail = true;
+            renderProblem();
+        });
+        elements['found-documents'].append(card);
+    }
+}
+
+function showFoundOverview() {
+    if (state.view !== 'found') return;
+
+    state.foundDetail = false;
+    state.currentIndex = -1;
+    setMessage('');
+    renderFoundOverview();
 }
 
 function pdfUrl(problem) {
@@ -119,6 +241,76 @@ function setPdfLoading(message = 'PDF-Seite wird geladen …') {
     elements['pdf-loading'].hidden = false;
 }
 
+function fitPdfTextLayer(pageElement) {
+    const layer = pageElement?.querySelector('.pdf-text-layer');
+    const sourceWidth = Number(layer?.dataset.sourceWidth);
+
+    if (!layer || !sourceWidth || !pageElement.clientWidth) return;
+
+    layer.style.transform = `scale(${pageElement.clientWidth / sourceWidth})`;
+}
+
+async function loadPdfTextLayer(pageElement, pageNumber, requestId) {
+    const layer = pageElement.querySelector('.pdf-text-layer');
+
+    try {
+        const response = await fetch(
+            `/api/pdf-text-layer?filename=${encodeURIComponent(state.pdfFile)}` +
+                `&page=${pageNumber}&width=1800&request=${requestId}-${pageNumber}`,
+        );
+        const payload = await response.json();
+
+        if (!response.ok) {
+            throw new Error(payload.error || 'Textschicht konnte nicht geladen werden');
+        }
+
+        if (requestId !== state.pdfLoadRequest || !pageElement.isConnected) return;
+
+        const measuringCanvas = document.createElement('canvas');
+        const context = measuringCanvas.getContext('2d');
+        const fragment = document.createDocumentFragment();
+
+        layer.dataset.sourceWidth = String(payload.width);
+        layer.dataset.sourceHeight = String(payload.height);
+        layer.style.width = `${payload.width}px`;
+        layer.style.height = `${payload.height}px`;
+
+        for (const item of payload.items || []) {
+            const span = document.createElement('span');
+            const fontFamily = item.font_family || 'sans-serif';
+
+            span.textContent = `${item.text}${item.has_eol ? '\n' : ' '}`;
+            span.dir = item.direction === 'rtl' ? 'rtl' : 'ltr';
+            span.style.left = `${item.left}px`;
+            span.style.top = `${item.top}px`;
+            span.style.fontSize = `${item.height}px`;
+            span.style.fontFamily = fontFamily;
+
+            let scaleX = 1;
+
+            if (context && item.width > 0) {
+                context.font = `${item.height}px ${fontFamily}`;
+                const measuredWidth = context.measureText(item.text).width;
+
+                if (measuredWidth > 0) {
+                    scaleX = item.width / measuredWidth;
+                }
+            }
+
+            span.style.transform = `rotate(${item.angle || 0}rad) scaleX(${scaleX})`;
+            fragment.append(span);
+        }
+
+        layer.replaceChildren(fragment);
+        layer.hidden = false;
+        fitPdfTextLayer(pageElement);
+    } catch (error) {
+        if (requestId === state.pdfLoadRequest) {
+            layer.dataset.error = error.message;
+        }
+    }
+}
+
 function problemRegionCount(problem) {
     const regions = Array.isArray(problem.evidence?.regions) ? problem.evidence.regions.length : 0;
     const boundingBox = Array.isArray(problem.evidence?.bbox) ? 1 : 0;
@@ -140,7 +332,7 @@ function problemTypeLabel(type) {
 
 function problemsForDocument(problem) {
     return state.problems
-        .filter(item => item.document_id === problem.document_id && !state.reviewed[item.problem_id])
+        .filter(item => item.document_id === problem.document_id && problemMatchesView(item))
         .sort((a, b) => (a.page ?? Number.MAX_SAFE_INTEGER) - (b.page ?? Number.MAX_SAFE_INTEGER));
 }
 
@@ -162,13 +354,6 @@ function updateViewerPageFindingSummary() {
 
 function renderDocumentFindings(problem) {
     const documentProblems = problemsForDocument(problem);
-    const totalRegions = documentProblems.reduce((total, item) => total + problemRegionCount(item), 0);
-    const affectedPages = new Set(documentProblems.map(item => item.page).filter(Number.isFinite));
-
-    elements['document-findings-summary'].textContent =
-        `${totalRegions} Verdachtsregion${totalRegions === 1 ? '' : 'en'} in ` +
-        `${documentProblems.length} technischen Fund${documentProblems.length === 1 ? '' : 'en'} auf ` +
-        `${affectedPages.size} Seite${affectedPages.size === 1 ? '' : 'n'}.`;
     elements['document-findings'].replaceChildren();
 
     for (const relatedProblem of documentProblems) {
@@ -181,6 +366,9 @@ function renderDocumentFindings(problem) {
         button.className = 'document-finding';
         button.classList.toggle('active', relatedProblem.problem_id === problem.problem_id);
         button.setAttribute('aria-current', relatedProblem.problem_id === problem.problem_id ? 'true' : 'false');
+        button.title = Number.isInteger(relatedProblem.page)
+            ? `Zu PDF-Seite ${relatedProblem.page} springen`
+            : 'Dokumentweiten Fund auswählen';
         heading.textContent =
             `Seite ${relatedProblem.page ?? 'dokumentweit'} · ` +
             `${regionCount} Region${regionCount === 1 ? '' : 'en'}`;
@@ -196,7 +384,7 @@ function renderDocumentFindings(problem) {
 
             state.currentIndex = targetIndex;
             setMessage('');
-            renderProblem();
+            renderProblem({ preservePdf: state.pdfFile === relatedProblem.file });
         });
         elements['document-findings'].append(button);
     }
@@ -215,8 +403,10 @@ function loadPdfPage(pageElement) {
     image.onload = () => {
         if (requestId !== state.pdfLoadRequest) return;
 
+        pageElement.style.aspectRatio = `${image.naturalWidth} / ${image.naturalHeight}`;
         image.hidden = false;
         status.hidden = true;
+        fitPdfTextLayer(pageElement);
 
         if (pageNumber === state.pdfPage) {
             elements['pdf-loading'].hidden = true;
@@ -230,6 +420,7 @@ function loadPdfPage(pageElement) {
     image.src =
         `/api/pdf-page?filename=${encodeURIComponent(state.pdfFile)}` +
         `&page=${pageNumber}&width=1800&request=${requestId}-${pageNumber}`;
+    loadPdfTextLayer(pageElement, pageNumber, requestId);
 }
 
 function renderPdfDocument() {
@@ -239,6 +430,7 @@ function renderPdfDocument() {
     const fragment = document.createDocumentFragment();
 
     state.pdfObserver?.disconnect();
+    state.pdfResizeObserver?.disconnect();
     elements['pdf-pages'].replaceChildren();
     elements['pdf-pages'].style.setProperty('--pdf-zoom', state.pdfZoom);
     setPdfLoading('PDF wird vorbereitet …');
@@ -248,6 +440,7 @@ function renderPdfDocument() {
         const pageElement = document.createElement('section');
         const pageLabel = document.createElement('span');
         const image = document.createElement('img');
+        const textLayer = document.createElement('div');
         const status = document.createElement('span');
 
         pageElement.className = 'pdf-page';
@@ -258,9 +451,12 @@ function renderPdfDocument() {
         image.alt = `Gerenderte PDF-Seite ${pageNumber}`;
         image.draggable = false;
         image.hidden = true;
+        textLayer.className = 'pdf-text-layer';
+        textLayer.hidden = true;
+        textLayer.setAttribute('aria-label', `Auswählbarer Text auf PDF-Seite ${pageNumber}`);
         status.className = 'pdf-page-status';
         status.textContent = `Seite ${pageNumber}`;
-        pageElement.append(pageLabel, image, status);
+        pageElement.append(pageLabel, image, textLayer, status);
         fragment.append(pageElement);
     }
 
@@ -285,6 +481,18 @@ function renderPdfDocument() {
     } else {
         for (const pageElement of elements['pdf-pages'].children) {
             loadPdfPage(pageElement);
+        }
+    }
+
+    if ('ResizeObserver' in window) {
+        state.pdfResizeObserver = new ResizeObserver(entries => {
+            for (const entry of entries) {
+                fitPdfTextLayer(entry.target);
+            }
+        });
+
+        for (const pageElement of elements['pdf-pages'].children) {
+            state.pdfResizeObserver.observe(pageElement);
         }
     }
 
@@ -335,6 +543,11 @@ function changePdfZoom(delta) {
     state.pdfZoom = Math.min(Math.max(state.pdfZoom + delta, 0.5), 2.5);
     elements['pdf-pages'].style.setProperty('--pdf-zoom', state.pdfZoom);
     updatePdfControls();
+    window.requestAnimationFrame(() => {
+        for (const pageElement of elements['pdf-pages'].children) {
+            fitPdfTextLayer(pageElement);
+        }
+    });
 }
 
 function updateCurrentPdfPageFromScroll() {
@@ -359,20 +572,10 @@ function updateCurrentPdfPageFromScroll() {
 
 function renderProgress() {
     const counts = reviewCounts();
-    const problem = currentProblem();
-    const filteredDocumentIds = [...new Set(state.filtered.map(item => item.document_id))];
-    const documentIndex = problem ? filteredDocumentIds.indexOf(problem.document_id) : -1;
-    const reviewedCount = counts.accepted + counts.skipped;
-    const percentage = state.problems.length ? (reviewedCount / state.problems.length) * 100 : 0;
 
-    elements['review-position'].textContent =
-        `PDF ${documentIndex >= 0 ? documentIndex + 1 : '–'} / ${filteredDocumentIds.length} · ` +
-        `Fund ${state.currentIndex >= 0 ? state.currentIndex + 1 : '–'} / ${state.filtered.length}`;
-    elements['open-documents-count'].textContent = counts.openDocuments;
+    elements['problem-documents-count'].textContent = counts.totalDocuments;
     elements['accepted-count'].textContent = counts.accepted;
     elements['skipped-count'].textContent = counts.skipped;
-    elements['remaining-count'].textContent = counts.remaining;
-    elements['progress-fill'].style.width = `${percentage}%`;
 }
 
 function renderDecision(problem) {
@@ -445,9 +648,15 @@ async function renderRecoveredText(problem) {
     }
 }
 
-function renderProblem() {
+function renderProblem({ preservePdf = false } = {}) {
     const problem = currentProblem();
 
+    if (state.view === 'found' && !state.foundDetail) {
+        renderFoundOverview();
+        return;
+    }
+
+    renderViewControls();
     renderProgress();
 
     if (!problem) {
@@ -455,9 +664,12 @@ function renderProblem() {
 
         elements['review-content'].hidden = true;
         elements['review-empty'].hidden = false;
-        elements['review-empty'].innerHTML = allReviewed
-            ? '<strong>Alle Verdachtsfälle geprüft</strong><p>Es sind keine offenen Funde mehr vorhanden.</p>'
-            : '<strong>Keine offenen Fälle in diesem Filter</strong><p>Wähle einen anderen Filter oder prüfe den Datenbestand.</p>';
+        elements['review-empty'].innerHTML =
+            state.view === 'found'
+                ? '<strong>Noch keine bestätigten Funde</strong><p>Bestätigte Funde erscheinen automatisch in dieser Ansicht.</p>'
+                : allReviewed
+                  ? '<strong>Alle Verdachtsfälle geprüft</strong><p>Es sind keine offenen Funde mehr vorhanden.</p>'
+                  : '<strong>Keine offenen Fälle in diesem Filter</strong><p>Wähle einen anderen Filter oder prüfe den Datenbestand.</p>';
         elements['empty-viewer'].hidden = false;
         elements['empty-viewer'].innerHTML = '<p>Kein PDF ausgewählt.</p>';
         state.pdfObserver?.disconnect();
@@ -474,15 +686,9 @@ function renderProblem() {
     elements['empty-viewer'].hidden = true;
 
     const url = pdfUrl(problem);
-    const documentProblems = state.problems.filter(item => item.document_id === problem.document_id);
-    const documentProblemIndex = documentProblems.findIndex(item => item.problem_id === problem.problem_id);
-
     elements['open-pdf'].href = url;
     elements['open-pdf'].hidden = false;
     elements['viewer-label'].textContent = `${problem.file}${problem.page ? ` · Seite ${problem.page}` : ''}`;
-    elements['problem-counter'].textContent =
-        `Problem ${documentProblemIndex + 1} von ${documentProblems.length}` +
-        ` · Fall ${state.currentIndex + 1} von ${state.filtered.length}`;
     elements['document-title'].textContent = problem.title || 'Ohne Titel';
     elements['filename'].textContent = problem.file;
     elements['document-id'].textContent = problem.document_id;
@@ -495,44 +701,53 @@ function renderProblem() {
     elements.evidence.textContent = JSON.stringify(problem.evidence || {}, null, 2);
     renderDocumentFindings(problem);
 
-    if (problem.source_url) {
-        elements['source-url'].href = problem.source_url;
-        elements['source-url'].hidden = false;
-        elements['no-source'].hidden = true;
-    } else {
-        elements['source-url'].hidden = true;
-        elements['no-source'].hidden = false;
-    }
-
     renderDecision(problem);
     renderRecoveredText(problem);
-    loadPdf(problem);
+
+    if (preservePdf && state.pdfFile === problem.file) {
+        if (Number.isInteger(problem.page) && problem.page > 0) {
+            changePdfPage(problem.page);
+        }
+    } else {
+        loadPdf(problem);
+    }
+
     updateViewerPageFindingSummary();
     setBusy(false);
 }
 
-function applyFilters({ preserveProblemId = null, preferUnreviewed = false } = {}) {
+function applyFilters({ preserveProblemId = null } = {}) {
     const severity = elements['severity-filter'].value;
     const type = elements['type-filter'].value;
 
     state.filtered = state.problems.filter(problem => {
         const severityMatches = severity === 'all' || problem.severity === severity;
         const typeMatches = type === 'all' || problem.type === type;
-        const isUnreviewed = !state.reviewed[problem.problem_id];
+        const viewMatches = problemMatchesView(problem);
 
-        return severityMatches && typeMatches && isUnreviewed;
+        return severityMatches && typeMatches && viewMatches;
     });
 
     let nextIndex = preserveProblemId
         ? state.filtered.findIndex(problem => problem.problem_id === preserveProblemId)
         : -1;
 
-    if (nextIndex < 0 && preferUnreviewed) {
-        nextIndex = state.filtered.findIndex(problem => !state.reviewed[problem.problem_id]);
+    if (state.view === 'found' && !state.foundDetail) {
+        state.currentIndex = -1;
+        renderFoundOverview();
+    } else {
+        state.currentIndex = nextIndex >= 0 ? nextIndex : state.filtered.length ? 0 : -1;
+        renderProblem();
     }
+}
 
-    state.currentIndex = nextIndex >= 0 ? nextIndex : state.filtered.length ? 0 : -1;
-    renderProblem();
+function switchView(view) {
+    if (!['investigate', 'found'].includes(view) || state.view === view) return;
+
+    state.view = view;
+    state.foundDetail = false;
+    setMessage('');
+    applyFilters();
 }
 
 function populateTypeFilter() {
@@ -569,7 +784,7 @@ function removeReviewedAndAdvance(problemId) {
 async function saveDecision(decision) {
     const problem = currentProblem();
 
-    if (!problem || state.saving) return;
+    if (!problem || state.saving || state.view !== 'investigate') return;
 
     setBusy(true);
     setMessage(decision === 'accept' ? 'Bestätigung wird gespeichert …' : 'Skip wird gespeichert …');
@@ -616,7 +831,7 @@ async function initialize() {
         state.reviewed = progressPayload.reviewed && typeof progressPayload.reviewed === 'object' ? progressPayload.reviewed : {};
 
         populateTypeFilter();
-        applyFilters({ preferUnreviewed: true });
+        applyFilters();
         setMessage(state.problems.length ? '' : 'Keine Verdachtsfälle gefunden.');
     } catch (error) {
         elements['review-empty'].innerHTML = `<strong>Fehler beim Laden</strong><p>${error.message}</p>`;
@@ -628,6 +843,9 @@ async function initialize() {
 
 elements.previous.addEventListener('click', () => move(-1));
 elements.next.addEventListener('click', () => move(1));
+elements['view-investigate'].addEventListener('click', () => switchView('investigate'));
+elements['view-found'].addEventListener('click', () => switchView('found'));
+elements['found-back'].addEventListener('click', showFoundOverview);
 elements.skip.addEventListener('click', () => saveDecision('skip'));
 elements.accept.addEventListener('click', () => saveDecision('accept'));
 elements['pdf-page-previous'].addEventListener('click', () => changePdfPage(state.pdfPage - 1));
@@ -643,9 +861,17 @@ elements['pdf-scroll'].addEventListener('scroll', () => {
         updateCurrentPdfPageFromScroll();
     });
 });
+window.addEventListener('resize', () => {
+    for (const pageElement of elements['pdf-pages'].children) {
+        fitPdfTextLayer(pageElement);
+    }
+});
 
 for (const filter of [elements['severity-filter'], elements['type-filter']]) {
-    filter.addEventListener('change', () => applyFilters({ preferUnreviewed: true }));
+    filter.addEventListener('change', () => {
+        if (state.view === 'found') state.foundDetail = false;
+        applyFilters();
+    });
 }
 
 document.addEventListener('keydown', event => {
@@ -653,16 +879,16 @@ document.addEventListener('keydown', event => {
         return;
     }
 
-    if (event.key.toLowerCase() === 'a') {
+    if (state.view === 'investigate' && event.key.toLowerCase() === 'a') {
         event.preventDefault();
         saveDecision('accept');
-    } else if (event.key.toLowerCase() === 's') {
+    } else if (state.view === 'investigate' && event.key.toLowerCase() === 's') {
         event.preventDefault();
         saveDecision('skip');
-    } else if (event.key === 'ArrowLeft') {
+    } else if (event.key === 'ArrowLeft' && (state.view !== 'found' || state.foundDetail)) {
         event.preventDefault();
         move(-1);
-    } else if (event.key === 'ArrowRight') {
+    } else if (event.key === 'ArrowRight' && (state.view !== 'found' || state.foundDetail)) {
         event.preventDefault();
         move(1);
     }

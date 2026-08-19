@@ -1,5 +1,70 @@
 [
   {
+    "problem_id": "1202:1:DARK_PAGE_CONTENT_HIDES_LIVE_TEXT:0",
+    "document_id": "1202",
+    "file": "1202.pdf",
+    "title": "scan-08082019_geschwaerzt.pdf",
+    "page": 1,
+    "type": "DARK_PAGE_CONTENT_HIDES_LIVE_TEXT",
+    "risk_score": 94,
+    "severity": "critical",
+    "evidence": {
+      "affected_text_items": 11,
+      "regions": [
+        [
+          433.14,
+          611.52,
+          514.65,
+          623.52
+        ],
+        [
+          225.3,
+          340.8,
+          296.72,
+          352.8
+        ],
+        [
+          92.57,
+          340.8,
+          204.13,
+          352.8
+        ],
+        [
+          115.27,
+          318.1,
+          219.63,
+          330.1
+        ],
+        [
+          92.57,
+          295.39,
+          174.07,
+          307.39
+        ],
+        [
+          90.82,
+          163.91,
+          148.46,
+          172.91
+        ],
+        [
+          90.82,
+          146.44,
+          139.72,
+          155.44
+        ],
+        [
+          90.82,
+          127.23,
+          139.72,
+          136.23
+        ]
+      ]
+    },
+    "source_url": "https://fragdenstaat.de/dokumente/1202/",
+    "reviewed_at": "2026-08-19T08:47:09.393Z"
+  },
+  {
     "problem_id": "3145:1:DARK_PAGE_CONTENT_HIDES_LIVE_TEXT:1",
     "document_id": "3145",
     "file": "3145.pdf",
@@ -39,5 +104,28 @@
     },
     "source_url": "https://fragdenstaat.de/dokumente/3145-untitled/",
     "reviewed_at": "2026-08-18T15:58:19.297Z"
+  },
+  {
+    "problem_id": "3145:3:ANNOTATION_OVERLAY_HIDES_LIVE_TEXT:0",
+    "document_id": "3145",
+    "file": "3145.pdf",
+    "title": "Untitled",
+    "page": 3,
+    "type": "ANNOTATION_OVERLAY_HIDES_LIVE_TEXT",
+    "risk_score": 98,
+    "severity": "critical",
+    "evidence": {
+      "affected_text_items": 2,
+      "regions": [
+        [
+          108.37,
+          952.44,
+          159.75,
+          973.44
+        ]
+      ]
+    },
+    "source_url": "https://fragdenstaat.de/dokumente/3145-untitled/",
+    "reviewed_at": "2026-08-18T16:03:18.709Z"
   }
 ]

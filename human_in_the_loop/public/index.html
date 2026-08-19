@@ -5,26 +5,27 @@
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="color-scheme" content="light" />
         <title>Redaction Review Desk</title>
-        <link rel="stylesheet" href="/style.css?v=20260818-7" />
-        <script src="/app.js?v=20260818-7" defer></script>
+        <link rel="stylesheet" href="/style.css?v=20260819-8" />
+        <script src="/app.js?v=20260819-8" defer></script>
     </head>
     <body>
         <header class="topbar">
             <div class="brand-block">
                 <p class="eyebrow">Redaction Research</p>
                 <h1>Review Desk</h1>
+                <nav class="view-switch" aria-label="Review-Ansicht">
+                    <button id="view-investigate" class="view-tab active" type="button" aria-selected="true">
+                        Investigate
+                    </button>
+                    <button id="view-found" class="view-tab" type="button" aria-selected="false">Found</button>
+                </nav>
             </div>
 
             <div class="progress-block" aria-live="polite">
-                <strong id="review-position">PDF – / – · Fund – / –</strong>
                 <div class="progress-stats">
-                    <span>PDFs offen <b id="open-documents-count">0</b></span>
-                    <span>Funde bestätigt <b id="accepted-count">0</b></span>
-                    <span>Funde übersprungen <b id="skipped-count">0</b></span>
-                    <span>Funde offen <b id="remaining-count">0</b></span>
-                </div>
-                <div class="progress-track" aria-hidden="true">
-                    <span id="progress-fill"></span>
+                    <span>PDFs mit Problemen <b id="problem-documents-count">0</b></span>
+                    <span>Bestätigt <b id="accepted-count">0</b></span>
+                    <span>Übersprungen <b id="skipped-count">0</b></span>
                 </div>
             </div>
 
@@ -48,14 +49,29 @@
             </div>
         </header>
 
-        <main class="workspace">
-            <section class="viewer-panel" aria-label="PDF Viewer">
+        <main id="workspace" class="workspace">
+            <section id="found-overview" class="found-overview" aria-labelledby="found-overview-title" hidden>
+                <header class="found-overview-header">
+                    <div>
+                        <p class="eyebrow">Found</p>
+                        <h2 id="found-overview-title">Bestätigte Dokumente</h2>
+                    </div>
+                    <p id="found-overview-summary"></p>
+                </header>
+                <div id="found-documents" class="found-documents"></div>
+                <div id="found-empty" class="found-empty" hidden>
+                    <strong>Noch keine bestätigten Dokumente</strong>
+                    <p>Mit Accept bestätigte Funde erscheinen automatisch hier.</p>
+                </div>
+            </section>
+
+            <section id="viewer-panel" class="viewer-panel" aria-label="PDF Viewer">
                 <div class="viewer-toolbar">
                     <div>
                         <span class="status-dot"></span>
                         <span id="viewer-label">Kein PDF ausgewählt</span>
                         <strong id="viewer-page-findings" class="viewer-page-findings"></strong>
-                        <span class="scroll-hint">Mausrad: durch alle PDF-Seiten scrollen</span>
+                        <span class="scroll-hint">Mausrad: scrollen · Text mit der Maus markieren und kopieren</span>
                     </div>
                     <div class="pdf-controls" aria-label="PDF-Steuerung">
                         <button id="pdf-page-previous" type="button" title="Vorherige PDF-Seite">− Seite</button>
@@ -80,11 +96,10 @@
                 </div>
             </section>
 
-            <aside class="review-panel" aria-label="Fehlerdetails">
+            <aside id="review-panel" class="review-panel" aria-label="Fehlerdetails">
                 <div id="review-content" class="review-content" hidden>
                     <div class="case-heading">
                         <div>
-                            <p class="eyebrow" id="problem-counter">Problem – von –</p>
                             <h2 id="document-title">Ohne Titel</h2>
                         </div>
                         <span id="decision-badge" class="decision-badge" hidden></span>
@@ -104,7 +119,7 @@
                             <dd id="filename">–</dd>
                         </div>
                         <div>
-                            <dt>Document ID</dt>
+                            <dt>ID</dt>
                             <dd id="document-id">–</dd>
                         </div>
                         <div>
@@ -112,25 +127,19 @@
                             <dd id="page">–</dd>
                         </div>
                         <div>
-                            <dt>Betroffene Textobjekte</dt>
+                            <dt>Textobjekte</dt>
                             <dd id="affected-items">–</dd>
                         </div>
                     </dl>
 
                     <section class="detail-section document-findings-section">
                         <h3>Alle Funde in diesem PDF</h3>
-                        <p id="document-findings-summary"></p>
                         <div id="document-findings" class="document-findings"></div>
                     </section>
 
                     <section class="detail-section">
                         <h3>Fehlertyp</h3>
                         <code id="problem-type">–</code>
-                    </section>
-
-                    <section class="detail-section">
-                        <h3>Evidence</h3>
-                        <pre id="evidence">{}</pre>
                     </section>
 
                     <section class="detail-section recovered-section">
@@ -142,10 +151,11 @@
                         <pre id="recovered-text" hidden></pre>
                     </section>
 
-                    <section class="detail-section source-section">
-                        <h3>Quelle</h3>
-                        <a id="source-url" href="#" target="_blank" rel="noopener noreferrer">Quelle öffnen</a>
-                        <span id="no-source">Nicht verfügbar</span>
+                    <section class="detail-section">
+                        <h3>Evidence</h3>
+                        <details>
+                            <pre id="evidence">{}</pre>
+                        </details>
                     </section>
 
                     <p class="privacy-note">
@@ -161,7 +171,8 @@
 
                 <div id="message" class="message" role="status" aria-live="polite"></div>
 
-                <nav class="review-actions" aria-label="Review-Navigation">
+                <nav id="review-actions" class="review-actions" aria-label="Review-Navigation">
+                    <button id="found-back" class="button button-secondary" type="button" hidden>← Übersicht</button>
                     <button id="previous" class="button button-secondary" type="button">← Previous</button>
                     <button id="skip" class="button button-skip" type="button">Skip <kbd>S</kbd></button>
                     <button id="accept" class="button button-accept" type="button">Accept <kbd>A</kbd></button>

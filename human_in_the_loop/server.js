@@ -225,6 +225,58 @@ function textItemToRect(item, viewport, Util) {
     };
 }
 
+function roundedCoordinate(value) {
+    return Math.round(value * 1000) / 1000;
+}
+
+function textItemToLayerItem(item, styles, viewport, Util) {
+    if (!item || typeof item.str !== 'string' || !item.str || !Array.isArray(item.transform)) {
+        return null;
+    }
+
+    const transform = Util.transform(viewport.transform, item.transform);
+    const style = styles?.[item.fontName] || {};
+    let angle = Math.atan2(transform[1], transform[0]);
+
+    if (style.vertical) {
+        angle += Math.PI / 2;
+    }
+
+    const fontHeight = Math.hypot(transform[2], transform[3]);
+
+    if (!Number.isFinite(fontHeight) || fontHeight <= 0) {
+        return null;
+    }
+
+    let fontAscent = fontHeight;
+
+    if (Number.isFinite(style.ascent)) {
+        fontAscent = style.ascent * fontHeight;
+    } else if (Number.isFinite(style.descent)) {
+        fontAscent = (1 + style.descent) * fontHeight;
+    }
+
+    const left = angle === 0 ? transform[4] : transform[4] + fontAscent * Math.sin(angle);
+    const top = angle === 0 ? transform[5] - fontAscent : transform[5] - fontAscent * Math.cos(angle);
+    const width = Math.abs(Number(item.width) || 0) * viewport.scale;
+
+    if (![left, top, width, angle].every(Number.isFinite)) {
+        return null;
+    }
+
+    return {
+        text: item.str,
+        left: roundedCoordinate(left),
+        top: roundedCoordinate(top),
+        width: roundedCoordinate(width),
+        height: roundedCoordinate(fontHeight),
+        angle: roundedCoordinate(angle),
+        font_family: typeof style.fontFamily === 'string' ? style.fontFamily.slice(0, 200) : 'sans-serif',
+        direction: item.dir === 'rtl' ? 'rtl' : 'ltr',
+        has_eol: item.hasEOL === true,
+    };
+}
+
 function problemRegions(problem) {
     const rawRegions = Array.isArray(problem.evidence?.regions) ? [...problem.evidence.regions] : [];
 
@@ -563,6 +615,72 @@ app.get('/api/pdf-page', async (request, response, next) => {
             'X-Content-Type-Options': 'nosniff',
         });
         response.send(png);
+    } catch (error) {
+        next(error);
+    } finally {
+        page?.cleanup();
+        await loadingTask?.destroy().catch(() => {});
+    }
+});
+
+app.get('/api/pdf-text-layer', async (request, response, next) => {
+    const filename = stringOrNull(request.query.filename);
+    const pageNumber = Number(request.query.page);
+    const requestedWidth = Number(request.query.width || 1600);
+
+    if (!filename || !Number.isInteger(pageNumber) || pageNumber < 1) {
+        response.status(400).json({ error: 'filename and a positive integer page are required' });
+        return;
+    }
+
+    if (!Number.isFinite(requestedWidth) || requestedWidth < 600 || requestedWidth > 2400) {
+        response.status(400).json({ error: 'width must be between 600 and 2400' });
+        return;
+    }
+
+    let loadingTask = null;
+    let page = null;
+
+    try {
+        const [{ getDocument, Util, VerbosityLevel }, pdfPath] = await Promise.all([getPdfjs(), resolvePdfPath(filename)]);
+        const bytes = await fs.readFile(pdfPath);
+
+        loadingTask = getDocument({
+            data: new Uint8Array(bytes),
+            cMapUrl: PDFJS_CMAP_URL,
+            cMapPacked: true,
+            standardFontDataUrl: PDFJS_STANDARD_FONT_URL,
+            iccUrl: PDFJS_ICC_URL,
+            wasmUrl: PDFJS_WASM_URL,
+            useWorkerFetch: false,
+            verbosity: VerbosityLevel.ERRORS,
+            stopAtErrors: false,
+        });
+
+        const pdfDocument = await loadingTask.promise;
+
+        if (pageNumber > pdfDocument.numPages) {
+            response.status(404).json({ error: `PDF has only ${pdfDocument.numPages} pages` });
+            return;
+        }
+
+        page = await pdfDocument.getPage(pageNumber);
+
+        const baseViewport = page.getViewport({ scale: 1 });
+        const viewport = page.getViewport({ scale: requestedWidth / baseViewport.width });
+        const textContent = await page.getTextContent({
+            includeMarkedContent: false,
+        });
+        const items = textContent.items
+            .map(item => textItemToLayerItem(item, textContent.styles, viewport, Util))
+            .filter(Boolean);
+
+        response.set('Cache-Control', 'private, no-store');
+        response.json({
+            width: roundedCoordinate(viewport.width),
+            height: roundedCoordinate(viewport.height),
+            items,
+        });
     } catch (error) {
         next(error);
     } finally {

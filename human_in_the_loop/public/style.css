@@ -12,7 +12,14 @@
     --accept-hover: #0f543b;
     --skip: #2d3936;
     --focus: #2176ae;
-    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family:
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        'Segoe UI',
+        sans-serif;
     color: var(--ink);
     background: var(--paper);
 }
@@ -80,44 +87,53 @@ p {
 
 h1 {
     margin-bottom: 0;
-    font-family: Georgia, "Times New Roman", serif;
+    font-family: Georgia, 'Times New Roman', serif;
     font-size: clamp(1.5rem, 2.1vw, 2.1rem);
     line-height: 1;
 }
 
-.progress-block strong {
-    display: block;
-    margin-bottom: 6px;
-    font-size: 0.92rem;
+.view-switch {
+    width: max-content;
+    margin-top: 10px;
+    padding: 3px;
+    display: flex;
+    gap: 3px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: #efebe2;
+}
+
+.view-tab {
+    min-width: 86px;
+    padding: 6px 10px;
+    border: 0;
+    border-radius: 4px;
+    color: var(--muted);
+    background: transparent;
+    cursor: pointer;
+    font-size: 0.7rem;
+    font-weight: 850;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.view-tab.active {
+    color: #fff;
+    background: var(--ink);
 }
 
 .progress-stats {
     display: flex;
     flex-wrap: wrap;
-    gap: 20px;
+    gap: 28px;
     row-gap: 4px;
     color: var(--muted);
-    font-size: 0.78rem;
+    font-size: 0.82rem;
 }
 
 .progress-stats b {
     color: var(--ink);
-}
-
-.progress-track {
-    height: 4px;
-    margin-top: 9px;
-    overflow: hidden;
-    border-radius: 999px;
-    background: #e4e0d7;
-}
-
-.progress-track span {
-    display: block;
-    width: 0;
-    height: 100%;
-    background: var(--accept);
-    transition: width 180ms ease;
+    font-size: 0.95rem;
 }
 
 .filters {
@@ -151,6 +167,122 @@ h1 {
     min-height: 0;
     display: grid;
     grid-template-columns: minmax(0, 7fr) minmax(360px, 3fr);
+}
+
+.found-overview {
+    grid-column: 1 / -1;
+    min-width: 0;
+    min-height: 0;
+    padding: 28px;
+    overflow-y: auto;
+    background: var(--paper);
+}
+
+.found-overview-header {
+    margin-bottom: 22px;
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: 20px;
+}
+
+.found-overview-header h2 {
+    margin-bottom: 0;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: clamp(1.6rem, 3vw, 2.4rem);
+}
+
+.found-overview-header > p {
+    margin-bottom: 4px;
+    color: var(--muted);
+    font-size: 0.82rem;
+}
+
+.found-documents {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
+    gap: 12px;
+}
+
+.found-document {
+    min-width: 0;
+    padding: 18px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 14px 18px;
+    align-items: start;
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    color: var(--ink);
+    background: var(--panel);
+    cursor: pointer;
+    text-align: left;
+}
+
+.found-document:hover {
+    border-color: #9eaaa6;
+    background: #fff;
+}
+
+.found-document-heading {
+    min-width: 0;
+    display: grid;
+    gap: 5px;
+}
+
+.found-document-heading strong,
+.found-document-heading span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.found-document-heading strong {
+    font: 700 1.08rem/1.25 Georgia, 'Times New Roman', serif;
+}
+
+.found-document-heading span,
+.found-document-metadata {
+    color: var(--muted);
+    font-size: 0.75rem;
+}
+
+.found-document-metadata {
+    grid-column: 1 / -1;
+}
+
+.found-document-score {
+    padding: 5px 7px;
+    border-radius: 4px;
+    color: #fff;
+    background: var(--low);
+    font-size: 0.68rem;
+    font-weight: 850;
+    white-space: nowrap;
+}
+
+.found-document-score.score-critical {
+    background: var(--critical);
+}
+
+.found-document-score.score-high {
+    background: var(--high);
+}
+
+.found-document-score.score-medium {
+    background: var(--medium);
+}
+
+.found-empty {
+    padding: 64px 20px;
+    color: var(--muted);
+    text-align: center;
+}
+
+.found-empty strong {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--ink);
 }
 
 .viewer-panel {
@@ -260,7 +392,7 @@ h1 {
     scrollbar-gutter: stable;
     -webkit-overflow-scrolling: touch;
     background: #4b504f;
-    user-select: none;
+    user-select: text;
 }
 
 .pdf-pages {
@@ -285,6 +417,40 @@ h1 {
     height: 100%;
     display: block;
     object-fit: contain;
+    pointer-events: none;
+    user-select: none;
+}
+
+.pdf-text-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+    overflow: hidden;
+    color: transparent;
+    transform-origin: 0 0;
+    cursor: text;
+    user-select: text;
+    -webkit-user-select: text;
+}
+
+.pdf-text-layer span {
+    position: absolute;
+    margin: 0;
+    padding: 0;
+    color: transparent;
+    line-height: 1;
+    white-space: pre;
+    transform-origin: 0 0;
+    cursor: text;
+    user-select: text;
+    -webkit-user-select: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.pdf-text-layer span::selection {
+    color: transparent;
+    background: rgb(33 118 174 / 0.42);
 }
 
 .pdf-page-label {
@@ -292,7 +458,7 @@ h1 {
     position: absolute;
     top: 8px;
     left: 8px;
-    z-index: 1;
+    z-index: 3;
     border-radius: 4px;
     color: #f1f4f3;
     background: rgb(25 31 29 / 0.78);
@@ -303,6 +469,7 @@ h1 {
 .pdf-page-status {
     position: absolute;
     inset: 0;
+    z-index: 4;
     display: grid;
     place-items: center;
     color: #59625f;
@@ -355,6 +522,7 @@ h1 {
 .review-content {
     padding: 24px 24px 12px;
     overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .case-heading {
@@ -365,11 +533,11 @@ h1 {
 }
 
 .case-heading h2 {
-    max-width: 28ch;
-    margin-bottom: 20px;
-    font-family: Georgia, "Times New Roman", serif;
-    font-size: 1.35rem;
-    line-height: 1.2;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .decision-badge {
@@ -404,7 +572,7 @@ h1 {
 
 .risk-score {
     min-width: 64px;
-    font-family: Georgia, "Times New Roman", serif;
+    font-family: Georgia, 'Times New Roman', serif;
     font-size: 2.5rem;
     font-weight: 700;
     line-height: 1;
@@ -440,7 +608,7 @@ h1 {
 .details-grid {
     margin: 0 0 22px;
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
     gap: 14px;
 }
 
@@ -474,13 +642,6 @@ dd {
     border: 1px solid var(--line);
     border-radius: 5px;
     background: #f7f4ec;
-}
-
-#document-findings-summary {
-    margin-bottom: 10px;
-    color: var(--muted);
-    font-size: 0.76rem;
-    line-height: 1.4;
 }
 
 .document-findings {
@@ -537,7 +698,12 @@ dd {
     border-radius: 5px;
     color: #27302e;
     background: #f0ede5;
-    font: 0.72rem/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font:
+        0.72rem/1.5 ui-monospace,
+        SFMono-Regular,
+        Menlo,
+        Consolas,
+        monospace;
     white-space: pre-wrap;
 }
 
@@ -588,17 +754,6 @@ dd {
     user-select: text;
 }
 
-.source-section a {
-    color: #165c80;
-    font-size: 0.84rem;
-    font-weight: 700;
-}
-
-.source-section span {
-    color: var(--muted);
-    font-size: 0.84rem;
-}
-
 .privacy-note {
     padding: 10px 12px;
     border-left: 3px solid #80948c;
@@ -647,6 +802,10 @@ dd {
     background: #fff;
 }
 
+.review-actions.found-view {
+    grid-template-columns: repeat(3, 1fr);
+}
+
 .button {
     min-height: 46px;
     padding: 10px 12px;
@@ -657,7 +816,9 @@ dd {
     font-weight: 850;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    transition: background 120ms ease, transform 120ms ease;
+    transition:
+        background 120ms ease,
+        transform 120ms ease;
 }
 
 .button:hover:not(:disabled) {
@@ -694,7 +855,9 @@ kbd {
     padding: 1px 5px;
     border: 1px solid currentColor;
     border-radius: 3px;
-    font: 0.65rem ui-monospace, monospace;
+    font:
+        0.65rem ui-monospace,
+        monospace;
     opacity: 0.7;
 }
 
@@ -729,6 +892,16 @@ kbd {
     .workspace {
         height: auto;
         grid-template-columns: 1fr;
+    }
+
+    .found-overview {
+        padding: 20px 14px;
+    }
+
+    .found-overview-header {
+        align-items: start;
+        flex-direction: column;
+        gap: 8px;
     }
 
     .viewer-panel {
