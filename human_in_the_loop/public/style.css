@@ -799,6 +799,46 @@ dd {
     background: #fff8e8;
 }
 
+.metadata-section {
+    padding: 13px;
+    border: 1px solid #aab9b3;
+    border-radius: 5px;
+    background: #f1f6f3;
+}
+
+.metadata-heading {
+    margin-bottom: 8px;
+}
+
+.metadata-heading h3 {
+    margin-bottom: 0;
+    color: #31584b;
+}
+
+#metadata-status {
+    margin: 0;
+    color: #536b62;
+    font-size: 0.76rem;
+    line-height: 1.45;
+}
+
+#metadata-content {
+    max-height: 320px;
+    border-color: #aab9b3;
+    color: #17211f;
+    background: #fff;
+    user-select: text;
+}
+
+.metadata-email-match {
+    padding: 1px 2px;
+    border-radius: 3px;
+    color: #58151c;
+    background: #ffd76a;
+    box-shadow: 0 0 0 1px #dfa728;
+    font-weight: 800;
+}
+
 .recovered-heading {
     margin-bottom: 8px;
     display: flex;
@@ -837,15 +877,6 @@ dd {
     background: #fffdf8;
     font-size: 0.8rem;
     user-select: text;
-}
-
-.privacy-note {
-    padding: 10px 12px;
-    border-left: 3px solid #80948c;
-    color: var(--muted);
-    background: #f0f3ef;
-    font-size: 0.72rem;
-    line-height: 1.45;
 }
 
 .review-empty {

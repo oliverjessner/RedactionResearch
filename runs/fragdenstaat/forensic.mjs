@@ -18,7 +18,7 @@ const {
     saveDocumentScanResult,
     startScanRun,
     updateScanRun,
-} = require('./lib/forensic-db.js');
+} = require('../../lib/forensic-db.js');
 
 const OUTPUT_DIR = path.join(__dirname, 'output');
 const DISCOVERY_DIR = path.join(OUTPUT_DIR, 'discovery');
@@ -1449,7 +1449,9 @@ async function main() {
                             `${result.problems[0].type}`,
                     );
                 } else {
-                    console.log(`[${i + 1}/${pdfFiles.length}] ${fileName} | ` + `clean / no score >= ${options.minScore}`);
+                    console.log(
+                        `[${i + 1}/${pdfFiles.length}] ${fileName} | ` + `clean / no score >= ${options.minScore}`,
+                    );
                 }
             } catch (error) {
                 processed++;
@@ -1479,12 +1481,7 @@ async function main() {
 
         const problemDocumentsTotal = countProblemDocuments(database, options.project);
 
-        updateScanRun(
-            database,
-            runId,
-            { processed, skipped, problemDocumentsTotal },
-            { complete: true },
-        );
+        updateScanRun(database, runId, { processed, skipped, problemDocumentsTotal }, { complete: true });
 
         console.log('');
 

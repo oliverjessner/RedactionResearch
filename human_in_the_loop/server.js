@@ -12,6 +12,13 @@ const {
     openForensicDatabase,
     saveReview,
 } = require('../lib/forensic-db.js');
+const {
+    FORENSIC_RENDER_SCALE,
+    combineRecoveredText,
+    problemRegions,
+    recoverProblemRegions,
+    textItemToRect,
+} = require('../lib/pdf-text-recovery.js');
 
 const APP_DIR = __dirname;
 const PROJECT_DIR = path.resolve(APP_DIR, '..');
@@ -26,7 +33,6 @@ const PDFJS_CMAP_URL = `${path.join(PDFJS_ROOT, 'cmaps')}${path.sep}`;
 const PDFJS_STANDARD_FONT_URL = `${path.join(PDFJS_ROOT, 'standard_fonts')}${path.sep}`;
 const PDFJS_ICC_URL = `${path.join(PDFJS_ROOT, 'iccs')}${path.sep}`;
 const PDFJS_WASM_URL = `${path.join(PDFJS_ROOT, 'wasm')}${path.sep}`;
-const FORENSIC_RENDER_SCALE = 1.5;
 const PDF_DOCUMENT_CACHE_LIMIT = 3;
 const PDF_ARTIFACT_CACHE_MAX_ENTRIES = 48;
 const PDF_ARTIFACT_CACHE_MAX_BYTES = 128 * 1024 * 1024;
@@ -120,72 +126,37 @@ function sanitizeEvidence(evidence) {
     return clean;
 }
 
-function normalizeRegion(value) {
-    if (!Array.isArray(value) || value.length !== 4) {
-        return null;
+function sanitizeMetadata(value, state = { fields: 0 }, depth = 0) {
+    if (depth > 6 || state.fields >= 250 || value === undefined) return undefined;
+    if (value === null || typeof value === 'boolean') return value;
+    if (typeof value === 'number') return Number.isFinite(value) ? value : undefined;
+    if (typeof value === 'string') return value.slice(0, 20_000);
+
+    if (Array.isArray(value)) {
+        return value
+            .slice(0, 100)
+            .map(item => sanitizeMetadata(item, state, depth + 1))
+            .filter(item => item !== undefined);
     }
 
-    const coordinates = value.map(Number);
-
-    if (!coordinates.every(Number.isFinite)) {
-        return null;
+    if (value instanceof Map) {
+        value = Object.fromEntries(value);
     }
 
-    return {
-        x0: Math.min(coordinates[0], coordinates[2]),
-        y0: Math.min(coordinates[1], coordinates[3]),
-        x1: Math.max(coordinates[0], coordinates[2]),
-        y1: Math.max(coordinates[1], coordinates[3]),
-        bbox: coordinates,
-    };
-}
+    if (typeof value !== 'object') return undefined;
 
-function intersects(a, b) {
-    return Math.min(a.x1, b.x1) > Math.max(a.x0, b.x0) && Math.min(a.y1, b.y1) > Math.max(a.y0, b.y0);
-}
+    const clean = Object.create(null);
 
-function nearHorizontal(angle) {
-    let normalized = Math.abs(angle % Math.PI);
+    for (const [key, item] of Object.entries(value)) {
+        if (state.fields >= 250) break;
 
-    if (normalized > Math.PI / 2) {
-        normalized = Math.PI - normalized;
+        state.fields++;
+        const sanitized = sanitizeMetadata(item, state, depth + 1);
+
+        if (sanitized !== undefined) clean[String(key).slice(0, 200)] = sanitized;
     }
 
-    return normalized < 0.18;
-}
-
-function textItemToRect(item, viewport, Util) {
-    if (!item || typeof item.str !== 'string' || !item.str.trim() || !Array.isArray(item.transform)) {
-        return null;
-    }
-
-    const transform = Util.transform(viewport.transform, item.transform);
-    const angle = Math.atan2(transform[1], transform[0]);
-
-    if (!nearHorizontal(angle)) {
-        return null;
-    }
-
-    const height = Math.max(Math.abs(item.height || 0) * viewport.scale, Math.hypot(transform[2], transform[3]));
-    const width = Math.abs(item.width || 0) * viewport.scale;
-
-    if (width <= 0 || height <= 0) {
-        return null;
-    }
-
-    let x0 = transform[4];
-
-    if (Math.cos(angle) < 0) {
-        x0 -= width;
-    }
-
-    return {
-        x0,
-        y0: transform[5] - height,
-        x1: x0 + width,
-        y1: transform[5],
-        text: item.str.replace(/\s+/g, ' ').trim(),
-    };
+    return clean;
 }
 
 function roundedCoordinate(value) {
@@ -238,16 +209,6 @@ function textItemToLayerItem(item, styles, viewport, Util) {
         direction: item.dir === 'rtl' ? 'rtl' : 'ltr',
         has_eol: item.hasEOL === true,
     };
-}
-
-function problemRegions(problem) {
-    const rawRegions = Array.isArray(problem.evidence?.regions) ? [...problem.evidence.regions] : [];
-
-    if (Array.isArray(problem.evidence?.bbox)) {
-        rawRegions.push(problem.evidence.bbox);
-    }
-
-    return rawRegions.map(normalizeRegion).filter(Boolean);
 }
 
 async function resolvePdfPath(filename) {
@@ -506,30 +467,32 @@ async function recoverTextForProblem(problem) {
             includeMarkedContent: true,
         });
         const textItems = textContent.items.map(item => textItemToRect(item, viewport, Util)).filter(Boolean);
-        const recoveredRegions = regions.map(region => {
-            const matchingItems = textItems.filter(item => intersects(region, item));
-            const text = matchingItems
-                .map(item => item.text)
-                .filter(Boolean)
-                .join(' ')
-                .replace(/\s+/g, ' ')
-                .trim();
-
-            return {
-                bbox: region.bbox,
-                text,
-                text_item_count: matchingItems.length,
-            };
-        });
+        const recoveredRegions = recoverProblemRegions(problem, textItems);
 
         return {
             available: true,
             page: problem.page,
             regions: recoveredRegions,
-            recovered_text: recoveredRegions
-                .map(region => region.text)
-                .filter(Boolean)
-                .join('\n'),
+            recovered_text: combineRecoveredText(recoveredRegions),
+        };
+    });
+}
+
+async function readPdfMetadata(problem) {
+    const descriptor = await resolvePdfDescriptor(problem.file);
+
+    return withPdfDocument(descriptor, async pdfDocument => {
+        const metadata = await pdfDocument.getMetadata();
+        const info = sanitizeMetadata(metadata?.info) || {};
+        const rawXmp = typeof metadata?.metadata?.getAll === 'function' ? metadata.metadata.getAll() : null;
+        const xmp = sanitizeMetadata(rawXmp) || {};
+        const available = Object.keys(info).length > 0 || Object.keys(xmp).length > 0;
+
+        return {
+            available,
+            reason: available ? null : 'Dieses PDF enthält keine lesbaren Info- oder XMP-Metadaten.',
+            info,
+            xmp,
         };
     });
 }
@@ -597,6 +560,35 @@ app.get('/api/recovered-text', async (request, response, next) => {
         response.json({
             problem_id: problemId,
             ...(await recoverTextForProblem(problem)),
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+app.get('/api/pdf-metadata', async (request, response, next) => {
+    try {
+        const problemId = stringOrNull(request.query.problem_id);
+
+        if (!problemId) {
+            response.status(400).json({ error: 'problem_id is required' });
+            return;
+        }
+
+        const problem = getDatabaseProblem(database, PROJECT, problemId);
+
+        if (!problem) {
+            response.status(404).json({ error: 'Unknown problem_id' });
+            return;
+        }
+
+        response.set({
+            'Cache-Control': 'private, no-store',
+            'X-Content-Type-Options': 'nosniff',
+        });
+        response.json({
+            problem_id: problemId,
+            ...(await readPdfMetadata(problem)),
         });
     } catch (error) {
         next(error);

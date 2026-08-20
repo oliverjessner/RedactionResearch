@@ -47,6 +47,23 @@ Anschließend `http://localhost:3000` öffnen. Die App liest Findings direkt aus
 Discovery und Download verwenden weiterhin ausschließlich ihre JSON-Dateien unter `output/discovery/` und
 `output/download/`.
 
+## Offene Funde nach rekonstruiertem Text filtern
+
+Das Batch-Skript verwendet dieselbe Regionsauswertung wie die Review-App. Es speichert oder protokolliert den
+rekonstruierten Text nicht. Zuerst einen Dry Run ausführen:
+
+```bash
+npm run filter:open
+```
+
+Nur Funde, deren nicht-leerer Text ausschließlich aus Unterstrichen und Leerraum besteht, werden mit `--apply`
+automatisch als `skipped` gespeichert. Treffer mit mindestens einem Buchstaben oder einer Zahl sowie leere,
+nicht auslesbare oder andere reine Symboltreffer bleiben offen:
+
+```bash
+npm run filter:open -- --apply
+```
+
 ## Problems
 
 - Schwarzer Balken über weiterhin vorhandenem Text

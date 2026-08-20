@@ -11,6 +11,7 @@ function createFixturePdf() {
         '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
         '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Resources << >> /Contents 4 0 R >>',
         '<< /Length 4 >>\nstream\nq\nQ\nendstream',
+        '<< /Title (Fixture metadata) /Author (reviewer@example.test) >>',
     ];
     let pdf = '%PDF-1.4\n';
     const offsets = [0];
@@ -27,7 +28,7 @@ function createFixturePdf() {
         .slice(1)
         .map(offset => `${String(offset).padStart(10, '0')} 00000 n \n`)
         .join('');
-    pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF\n`;
+    pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R /Info 5 0 R >>\nstartxref\n${xrefOffset}\n%%EOF\n`;
 
     return pdf;
 }
@@ -103,13 +104,15 @@ test('API safely serves, reviews, and persists SQLite findings', async () => {
         const baseUrl = `http://127.0.0.1:${port}`;
         const appResponse = await fetch(`${baseUrl}/`);
         const appMarkup = await appResponse.text();
-        const appScript = await (await fetch(`${baseUrl}/app.js?v=20260819-11`)).text();
+        const appScript = await (await fetch(`${baseUrl}/app.js?v=20260820-5`)).text();
 
         assert.equal(appResponse.status, 200);
         assert.match(appMarkup, /id="pdf-scroll"/);
         assert.match(appMarkup, /id="pdf-pages"/);
         assert.match(appMarkup, /id="document-findings"/);
         assert.match(appMarkup, /PDFs mit Problemen/);
+        assert.match(appMarkup, /id="remaining-count"/);
+        assert.match(appMarkup, /Noch offen/);
         assert.doesNotMatch(appMarkup, /Funde offen/);
         assert.doesNotMatch(appMarkup, /problem-counter/);
         assert.doesNotMatch(appMarkup, /document-findings-summary/);
@@ -124,6 +127,10 @@ test('API safely serves, reviews, and persists SQLite findings', async () => {
         assert.match(appMarkup, /id="project-name"/);
         assert.match(appMarkup, /id="coordinate-input"/);
         assert.match(appMarkup, /id="coordinate-clear"/);
+        assert.match(appMarkup, /id="metadata-section"/);
+        assert.doesNotMatch(appMarkup, /id="metadata-toggle"/);
+        assert.doesNotMatch(appMarkup, /id="problem-type"/);
+        assert.doesNotMatch(appMarkup, /privacy-note/);
         assert.match(appScript, /decision === 'accepted'/);
         assert.match(appScript, /function foundDocumentGroups\(\)/);
         assert.match(appScript, /project: problem\.project \|\| 'Ohne Projekt'/);
@@ -131,6 +138,12 @@ test('API safely serves, reviews, and persists SQLite findings', async () => {
         assert.equal(appScript.includes('&request='), false);
         assert.match(appScript, /const PDF_RENDER_WIDTH = 1500/);
         assert.match(appScript, /function drawCoordinateBox\(\)/);
+        assert.match(appScript, /async function renderPdfMetadata\(problem\)/);
+        assert.match(appScript, /void renderPdfMetadata\(problem\)/);
+        assert.match(appScript, /function renderMetadataWithEmailHighlights\(formatted\)/);
+        assert.match(appScript, /metadata-email-match/);
+        assert.doesNotMatch(appScript, /togglePdfMetadata/);
+        assert.match(appScript, /Der Webserver läuft noch mit der vorherigen Version/);
         assert.match(appScript, /const viewMatches = problemMatchesView\(problem\)/);
 
         const problemsResponse = await fetch(`${baseUrl}/api/problems`);
@@ -175,6 +188,19 @@ test('API safely serves, reviews, and persists SQLite findings', async () => {
         assert.equal(noPageResponse.status, 200);
         assert.equal(noPagePayload.available, false);
         assert.equal(JSON.stringify(noPagePayload).includes('must never leave the server'), false);
+
+        const metadataResponse = await fetch(
+            `${baseUrl}/api/pdf-metadata?problem_id=${encodeURIComponent(problemsPayload.problems[1].problem_id)}`,
+        );
+        const metadataPayload = await metadataResponse.json();
+        assert.equal(metadataResponse.status, 200);
+        assert.equal(metadataResponse.headers.get('cache-control'), 'private, no-store');
+        assert.equal(metadataPayload.available, true);
+        assert.equal(metadataPayload.info.Title, 'Fixture metadata');
+        assert.equal(metadataPayload.info.Author, 'reviewer@example.test');
+
+        const unknownMetadataResponse = await fetch(`${baseUrl}/api/pdf-metadata?problem_id=unknown`);
+        assert.equal(unknownMetadataResponse.status, 404);
 
         const problemId = problemsPayload.problems[0].problem_id;
         const accept = () =>

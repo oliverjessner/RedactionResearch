@@ -8,6 +8,8 @@ const state = {
     saving: false,
     recoveredText: new Map(),
     recoveryRequest: 0,
+    metadataCache: new Map(),
+    metadataRequest: 0,
     pdfFile: null,
     pdfLoadRequest: 0,
     pdfPage: 1,
@@ -42,6 +44,9 @@ const elements = Object.fromEntries(
         'found-overview',
         'found-overview-summary',
         'message',
+        'metadata-content',
+        'metadata-section',
+        'metadata-status',
         'next',
         'open-pdf',
         'page',
@@ -59,9 +64,9 @@ const elements = Object.fromEntries(
         'problem-documents-count',
         'project-detail',
         'project-name',
-        'problem-type',
         'recovered-status',
         'recovered-text',
+        'remaining-count',
         'review-content',
         'review-empty',
         'review-actions',
@@ -711,6 +716,7 @@ function renderProgress() {
     elements['problem-documents-count'].textContent = counts.totalDocuments;
     elements['accepted-count'].textContent = counts.accepted;
     elements['skipped-count'].textContent = counts.skipped;
+    elements['remaining-count'].textContent = counts.remaining;
 }
 
 function renderDecision(problem) {
@@ -787,6 +793,94 @@ async function renderRecoveredText(problem) {
     }
 }
 
+function resetMetadataPanel(problem = null) {
+    state.metadataRequest++;
+    const hasProblem = Boolean(problem);
+
+    elements['metadata-section'].hidden = !hasProblem;
+    elements['metadata-status'].hidden = !hasProblem;
+    elements['metadata-status'].textContent = hasProblem ? 'Metadaten werden lokal aus dem PDF gelesen …' : '';
+    elements['metadata-content'].hidden = true;
+    elements['metadata-content'].textContent = '';
+}
+
+function formatPdfMetadata(payload) {
+    const metadata = {};
+
+    if (payload.info && Object.keys(payload.info).length > 0) metadata.Info = payload.info;
+    if (payload.xmp && Object.keys(payload.xmp).length > 0) metadata.XMP = payload.xmp;
+
+    return Object.keys(metadata).length > 0 ? JSON.stringify(metadata, null, 2) : '';
+}
+
+function renderMetadataWithEmailHighlights(formatted) {
+    const emailPattern = /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi;
+    const fragment = document.createDocumentFragment();
+    let lastIndex = 0;
+    let match;
+
+    while ((match = emailPattern.exec(formatted)) !== null) {
+        fragment.append(document.createTextNode(formatted.slice(lastIndex, match.index)));
+
+        const highlight = document.createElement('mark');
+        highlight.className = 'metadata-email-match';
+        highlight.textContent = match[0];
+        highlight.title = 'Erkannte E-Mail-Adresse';
+        fragment.append(highlight);
+        lastIndex = match.index + match[0].length;
+    }
+
+    fragment.append(document.createTextNode(formatted.slice(lastIndex)));
+    elements['metadata-content'].replaceChildren(fragment);
+}
+
+async function renderPdfMetadata(problem) {
+    const requestId = ++state.metadataRequest;
+
+    try {
+        let payload = state.metadataCache.get(problem.file);
+
+        if (!payload) {
+            const response = await fetch(`/api/pdf-metadata?problem_id=${encodeURIComponent(problem.problem_id)}`);
+            const contentType = response.headers.get('content-type') || '';
+
+            if (!contentType.includes('application/json')) {
+                throw new Error(
+                    response.status === 404
+                        ? 'Der Webserver läuft noch mit der vorherigen Version. Bitte neu starten und die Seite neu laden.'
+                        : `Der Webserver lieferte eine ungültige Antwort (${response.status}).`,
+                );
+            }
+
+            payload = await response.json();
+
+            if (!response.ok) {
+                throw new Error(payload.error || 'Metadaten konnten nicht gelesen werden');
+            }
+
+            state.metadataCache.set(problem.file, payload);
+        }
+
+        if (requestId !== state.metadataRequest || currentProblem()?.problem_id !== problem.problem_id) return;
+
+        const formatted = formatPdfMetadata(payload);
+
+        if (!payload.available || !formatted) {
+            elements['metadata-status'].textContent = payload.reason || 'Dieses PDF enthält keine lesbaren Metadaten.';
+            return;
+        }
+
+        elements['metadata-status'].hidden = true;
+        elements['metadata-content'].hidden = false;
+        renderMetadataWithEmailHighlights(formatted);
+    } catch (error) {
+        if (requestId !== state.metadataRequest) return;
+
+        elements['metadata-status'].hidden = false;
+        elements['metadata-status'].textContent = error.message;
+    }
+}
+
 function renderProblem({ preservePdf = false } = {}) {
     const problem = currentProblem();
 
@@ -817,6 +911,7 @@ function renderProblem({ preservePdf = false } = {}) {
         elements['pdf-loading'].hidden = true;
         elements['open-pdf'].hidden = true;
         elements['viewer-page-findings'].textContent = '';
+        resetMetadataPanel();
         setBusy(false);
         return;
     }
@@ -834,13 +929,14 @@ function renderProblem({ preservePdf = false } = {}) {
     elements['document-id'].textContent = problem.document_id;
     elements['project-name'].textContent = problem.project || 'Ohne Projekt';
     elements.page.textContent = problem.page ?? 'Dokumentweit';
-    elements['problem-type'].textContent = problem.type;
     elements['risk-score'].textContent = problem.risk_score;
     elements['risk-score'].className = `risk-score score-${problem.severity}`;
     elements.severity.textContent = problem.severity.toUpperCase();
     elements['affected-items'].textContent = problem.evidence?.affected_text_items ?? '–';
     elements.evidence.textContent = JSON.stringify(problem.evidence || {}, null, 2);
     renderDocumentFindings(problem);
+    resetMetadataPanel(problem);
+    void renderPdfMetadata(problem);
 
     renderDecision(problem);
 
