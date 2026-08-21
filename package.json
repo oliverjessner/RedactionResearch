@@ -1,8 +1,14 @@
 {
     "name": "redaction-research",
     "version": "0.1.0",
-    "private": true,
     "description": "Local web app for detecting and reviewing potentially incomplete PDF redactions",
+    "keywords": [
+        "pdf",
+        "redaction",
+        "forensics",
+        "privacy",
+        "security"
+    ],
     "homepage": "https://github.com/oliverjessner/RedactionResearch#readme",
     "bugs": {
         "url": "https://github.com/oliverjessner/RedactionResearch/issues"
@@ -12,12 +18,24 @@
         "url": "git+https://github.com/oliverjessner/RedactionResearch.git"
     },
     "license": "ISC",
-    "author": "",
+    "author": "Oliver Jessner",
     "type": "commonjs",
     "engines": {
         "node": ">=22.5.0"
     },
     "main": "server.js",
+    "files": [
+        "bin/",
+        "forensic.mjs",
+        "lib/",
+        "public/",
+        "scripts/filter-open-findings.mjs",
+        "server.js"
+    ],
+    "publishConfig": {
+        "access": "public",
+        "registry": "https://registry.npmjs.org/"
+    },
     "bin": {
         "RedactionResearch": "bin/redaction-research.js",
         "redaction-research": "bin/redaction-research.js"
@@ -28,7 +46,8 @@
         "download:muckrock": "uv run --python 3.12 scripts/muckrock_download.py",
         "filter:open": "node scripts/filter-open-findings.mjs",
         "scan": "node forensic.mjs",
-        "test": "node --test test/*.test.js"
+        "test": "node --test test/*.test.js",
+        "prepublishOnly": "npm test"
     },
     "dependencies": {
         "@napi-rs/canvas": "^1.0.7",

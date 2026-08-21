@@ -13,18 +13,17 @@ Alle PDFs, Analyseergebnisse und Review-Entscheidungen bleiben lokal auf dem Com
 - Node.js 22.5 oder neuer
 - Ein lokaler Ordner mit PDF-Dateien
 
-## Installation und Start
+## Installation und Start mit npm
 
 ```bash
-npm install
-npm link
+npm install --global redaction-research
 RedactionResearch
 ```
 
 Danach im Browser öffnen:
 
 ```text
-http://127.0.0.1:3000/
+http://127.0.0.1:3003/
 ```
 
 Einen anderen Port festlegen:
@@ -33,8 +32,21 @@ Einen anderen Port festlegen:
 RedactionResearch --port 4000
 ```
 
-`RedactionResearch --help` zeigt alle verfügbaren Optionen. Alternativ funktioniert der bisherige Start mit
-`npm start` weiterhin.
+`RedactionResearch --help` zeigt alle verfügbaren Optionen.
+
+## Installation und Start mit Homebrew
+
+```bash
+brew install oliverjessner/tap/redaction-research
+RedactionResearch
+```
+
+Für die Entwicklung direkt aus dem Repository:
+
+```bash
+npm install
+npm start
+```
 
 Nach Änderungen an der App muss der Server neu gestartet und die Seite neu geladen werden.
 
@@ -163,6 +175,10 @@ Die Web-App speichert ihre Daten an zwei Stellen:
 output/download/pdfs/<project_id>/
 output/forensic/forensic.sqlite
 ```
+
+Bei einer Installation über npm oder Homebrew entsteht `output/` im Ordner, aus dem `RedactionResearch`
+gestartet wird. Mit `REDACTION_RESEARCH_OUTPUT_DIR=/absoluter/pfad` kann ein anderer Datenordner festgelegt
+werden.
 
 SQLite enthält unter anderem:
 

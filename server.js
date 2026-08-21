@@ -31,14 +31,12 @@ const {
 
 const APP_DIR = __dirname;
 const PROJECT_DIR = APP_DIR;
-const OUTPUT_DIR = path.join(PROJECT_DIR, 'output');
+const OUTPUT_DIR = path.resolve(process.env.REDACTION_RESEARCH_OUTPUT_DIR || path.join(process.cwd(), 'output'));
 const FORENSIC_DIR = path.join(OUTPUT_DIR, 'forensic');
 const PDF_ROOT = path.resolve(process.env.HITL_PDF_ROOT || path.join(OUTPUT_DIR, 'download', 'pdfs'));
 
 const DATABASE_FILE = path.resolve(process.env.HITL_DATABASE_FILE || path.join(FORENSIC_DIR, 'forensic.sqlite'));
-const SCANNER_FILE = path.resolve(
-    process.env.HITL_SCANNER_FILE || path.join(PROJECT_DIR, 'forensic.mjs'),
-);
+const SCANNER_FILE = path.resolve(process.env.HITL_SCANNER_FILE || path.join(PROJECT_DIR, 'forensic.mjs'));
 const OPEN_FINDINGS_FILTER_FILE = path.resolve(
     process.env.HITL_OPEN_FINDINGS_FILTER_FILE || path.join(PROJECT_DIR, 'scripts', 'filter-open-findings.mjs'),
 );
@@ -53,7 +51,7 @@ const PDF_ARTIFACT_CACHE_MAX_BYTES = 128 * 1024 * 1024;
 const PDF_BROWSER_CACHE = 'private, max-age=3600';
 
 const HOST = process.env.HOST || '127.0.0.1';
-const PORT = Number(process.env.PORT || 3000);
+const PORT = Number(process.env.PORT || 3003);
 const database = openForensicDatabase(DATABASE_FILE);
 failStaleProjectJobs(database);
 
@@ -406,9 +404,7 @@ function trimPdfArtifactCache(excludedKey = null) {
         pdfArtifactCache.size > PDF_ARTIFACT_CACHE_MAX_ENTRIES ||
         pdfArtifactCacheBytes > PDF_ARTIFACT_CACHE_MAX_BYTES
     ) {
-        const candidate = [...pdfArtifactCache.entries()].find(
-            ([key, entry]) => key !== excludedKey && entry.ready,
-        );
+        const candidate = [...pdfArtifactCache.entries()].find(([key, entry]) => key !== excludedKey && entry.ready);
 
         if (!candidate) return;
 
@@ -716,16 +712,17 @@ function runScanJob(project, jobId) {
         bufferedOutput = `${bufferedOutput}${chunk}`.slice(-8000);
         const lines = bufferedOutput.split(/\r?\n/);
         bufferedOutput = lines.pop() || '';
-        const usefulLine = lines.map(line => line.trim()).filter(Boolean).at(-1);
+        const usefulLine = lines
+            .map(line => line.trim())
+            .filter(Boolean)
+            .at(-1);
 
         if (usefulLine) {
             lastMessage = usefulLine.slice(0, 500);
             const progress = usefulLine.match(/^\[(\d+)\/(\d+)\]/);
             updateProjectJob(database, jobId, {
                 status: 'running',
-                ...(progress
-                    ? { processed_count: Number(progress[1]), total_count: Number(progress[2]) }
-                    : {}),
+                ...(progress ? { processed_count: Number(progress[1]), total_count: Number(progress[2]) } : {}),
                 message: lastMessage,
             });
         }
@@ -922,7 +919,9 @@ app.post('/api/projects/:projectId/uploads/:jobId', async (request, response, ne
             message: `${processedCount} von ${current.total_count} PDFs übertragen`,
         });
 
-        response.status(result.imported ? 201 : 200).json({ file: result.file, imported: result.imported, job: updatedJob });
+        response
+            .status(result.imported ? 201 : 200)
+            .json({ file: result.file, imported: result.imported, job: updatedJob });
     } catch (error) {
         if (project && job) {
             const current = getProjectJob(database, project.id, job.id);
@@ -1179,7 +1178,8 @@ app.get('/api/pdf-text-layer', async (request, response, next) => {
 
 app.post('/api/review', async (request, response, next) => {
     const problemId = stringOrNull(request.body?.problem_id);
-    const decision = request.body?.decision === 'accept' ? 'accepted' : request.body?.decision === 'skip' ? 'skipped' : null;
+    const decision =
+        request.body?.decision === 'accept' ? 'accepted' : request.body?.decision === 'skip' ? 'skipped' : null;
 
     if (!problemId || !decision) {
         response.status(400).json({

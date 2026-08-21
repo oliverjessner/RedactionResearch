@@ -12,7 +12,7 @@ Verwendung:
   RedactionResearch [Optionen]
 
 Optionen:
-  -p, --port <port>  Port des lokalen Webservers (Standard: 3000)
+  -p, --port <port>  Port des lokalen Webservers (Standard: 3003)
   -h, --help         Hilfe anzeigen
   -v, --version      Version anzeigen
 
