@@ -13,6 +13,7 @@ src-tauri/gen/
 .env.*
 !.env.example
 client_secret.json
+output/download/pdfs/
 *.db
 *.sqlite
 !output/forensic/forensic.sqlite

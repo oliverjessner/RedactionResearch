@@ -20,6 +20,7 @@
     "main": "server.js",
     "scripts": {
         "start": "node server.js",
+        "download:found": "node scripts/download-found.mjs",
         "filter:open": "node scripts/filter-open-findings.mjs",
         "scan": "node forensic.mjs",
         "test": "node --test test/*.test.js"
