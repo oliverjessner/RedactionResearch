@@ -7,7 +7,7 @@ Benötigt Node.js 22.5 oder neuer, da Scanner und Review-App das integrierte SQL
 start to collect ~3k redacted pdf links from fragDenStaat (14.08.2026)
 
 ```bash
-node discovery.js
+node runs/fragdenstaat/discovery.js
 ```
 
 Discovery-Ergebnisse und Kandidatenlisten werden unter `output/discovery/` gespeichert.
@@ -15,7 +15,7 @@ Discovery-Ergebnisse und Kandidatenlisten werden unter `output/discovery/` gespe
 # Step 2 - download
 
 ```bash
-node download.js --project-id 1
+node runs/fragdenstaat/download.js --project-id 1
 ```
 
 Download-Ergebnisse und Download-Fortschritt werden als JSON unter `output/download/` gespeichert. Die PDF-Dateien
@@ -25,7 +25,7 @@ liegen projektweise unter `output/download/pdfs/<project_id>/`, für `fragdensta
 # Step 3 - detect
 
 ```bash
-node forensic.mjs
+npm run scan -- --project fragdenstaat.de
 ```
 
 Forensische Ergebnisse, Scan-Fortschritt und Fehler werden relational in
@@ -43,6 +43,12 @@ npm start
 
 Anschließend `http://localhost:3000` öffnen. Die App liest Findings direkt aus
 `output/forensic/forensic.sqlite` und schreibt Accept-/Skip-Entscheidungen transaktional in dieselbe Datenbank.
+
+Die App startet mit der Projektübersicht. Dort lassen sich Projekte mit Projektname und Organisation anlegen;
+der lokale PDF-Ordner wird über einen nativen Ordnerdialog ausgewählt. „PDFs hinzufügen“ importiert die
+ausgewählten PDFs nach `output/download/pdfs/<project_id>/`; „Forensic-Run“ scannt nur dieses Projekt im Hintergrund. Über
+„Review öffnen“ sind Investigate und Found anschließend auf das ausgewählte Projekt begrenzt. Import- und
+Scan-Status werden ebenfalls in SQLite gespeichert.
 
 Discovery und Download verwenden weiterhin ausschließlich ihre JSON-Dateien unter `output/discovery/` und
 `output/download/`.

@@ -7,6 +7,7 @@ import { AnnotationMode, Util, VerbosityLevel, getDocument } from 'pdfjs-dist/le
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const PROJECT_DIR = path.resolve(__dirname, '../..');
 const require = createRequire(import.meta.url);
 const {
     DEFAULT_PROJECT,
@@ -20,15 +21,17 @@ const {
     updateScanRun,
 } = require('../../lib/forensic-db.js');
 
-const OUTPUT_DIR = path.join(__dirname, 'output');
+const OUTPUT_DIR = path.resolve(process.env.FORENSIC_OUTPUT_DIR || path.join(PROJECT_DIR, 'output'));
 const DISCOVERY_DIR = path.join(OUTPUT_DIR, 'discovery');
 const DOWNLOAD_DIR = path.join(OUTPUT_DIR, 'download');
-const PDF_ROOT = path.join(DOWNLOAD_DIR, 'pdfs');
+const PDF_ROOT = path.resolve(process.env.FORENSIC_PDF_ROOT || path.join(DOWNLOAD_DIR, 'pdfs'));
 const FORENSIC_DIR = path.join(OUTPUT_DIR, 'forensic');
 
 const CANDIDATES_FILE = path.join(DISCOVERY_DIR, 'candidates.json');
 
-const DATABASE_FILE = path.join(FORENSIC_DIR, 'forensic.sqlite');
+const DATABASE_FILE = path.resolve(
+    process.env.FORENSIC_DATABASE_FILE || process.env.HITL_DATABASE_FILE || path.join(FORENSIC_DIR, 'forensic.sqlite'),
+);
 
 // ---------------------------------------------------------
 // PDF.js resources
@@ -1366,7 +1369,7 @@ async function main() {
     // Candidate metadata
     // -------------------------------------------------------
 
-    const candidates = await readJson(CANDIDATES_FILE, []);
+    const candidates = options.project === DEFAULT_PROJECT ? await readJson(CANDIDATES_FILE, []) : [];
 
     const candidateMap = new Map(
         Array.isArray(candidates) ? candidates.map(candidate => [String(candidate.document_id ?? ''), candidate]) : [],

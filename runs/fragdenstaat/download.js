@@ -3,7 +3,8 @@ const fsp = require('node:fs/promises');
 const path = require('node:path');
 const crypto = require('node:crypto');
 
-const OUTPUT_DIR = path.join(__dirname, 'output');
+const PROJECT_DIR = path.resolve(__dirname, '../..');
+const OUTPUT_DIR = path.join(PROJECT_DIR, 'output');
 const DISCOVERY_DIR = path.join(OUTPUT_DIR, 'discovery');
 const DOWNLOAD_DIR = path.join(OUTPUT_DIR, 'download');
 const PDF_ROOT = path.join(DOWNLOAD_DIR, 'pdfs');
@@ -366,7 +367,7 @@ async function downloadCandidate({ candidate, index, total, options }) {
 
             file_url: fileUrl,
 
-            local_file: path.relative(__dirname, pdfPath),
+            local_file: path.relative(PROJECT_DIR, pdfPath),
 
             bytes: stats.size,
             sha256,
@@ -406,7 +407,7 @@ async function downloadCandidate({ candidate, index, total, options }) {
 
         file_url: fileUrl,
 
-        local_file: path.relative(__dirname, pdfPath),
+        local_file: path.relative(PROJECT_DIR, pdfPath),
 
         bytes: buffer.length,
 

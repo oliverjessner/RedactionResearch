@@ -6,7 +6,8 @@ const BASE = 'https://fragdenstaat.de';
 const TARGET = Number(process.env.TARGET ?? 5000);
 const REQUEST_DELAY_MS = Number(process.env.DELAY ?? 300);
 
-const OUTPUT_DIR = path.join(__dirname, 'output', 'discovery');
+const PROJECT_DIR = path.resolve(__dirname, '../..');
+const OUTPUT_DIR = path.join(PROJECT_DIR, 'output', 'discovery');
 
 const OUTPUT_JSON = path.join(OUTPUT_DIR, 'candidates.json');
 const OUTPUT_CSV = path.join(OUTPUT_DIR, 'candidates.csv');

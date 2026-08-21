@@ -35,12 +35,15 @@ function createFixturePdf() {
 
 test('API safely serves, reviews, and persists SQLite findings', async () => {
     const temporaryDirectory = await fs.mkdtemp('/tmp/redaction-hitl-test-');
-    const pdfDirectory = path.join(temporaryDirectory, 'pdfs', '1');
+    const pdfRoot = path.join(temporaryDirectory, 'pdfs');
+    const pdfDirectory = path.join(pdfRoot, '1');
+    const scannerFile = path.join(temporaryDirectory, 'fake-scanner.mjs');
     const databaseFile = path.join(temporaryDirectory, 'forensic.sqlite');
     const port = 32_000 + (process.pid % 1_000);
 
     await fs.mkdir(pdfDirectory, { recursive: true });
     await fs.writeFile(path.join(pdfDirectory, '123.pdf'), createFixturePdf());
+    await fs.writeFile(scannerFile, "console.log('[1/1] fixture.pdf | clean');\n");
     const fixtureDatabase = openForensicDatabase(databaseFile);
 
     saveDocumentScanResult(fixtureDatabase, 'fragdenstaat.de', {
@@ -74,8 +77,8 @@ test('API safely serves, reviews, and persists SQLite findings', async () => {
     fixtureDatabase.close();
 
     process.env.HITL_DATABASE_FILE = databaseFile;
-    process.env.HITL_PROJECT = 'fragdenstaat.de';
-    process.env.HITL_PDF_DIR = pdfDirectory;
+    process.env.HITL_PDF_ROOT = pdfRoot;
+    process.env.HITL_SCANNER_FILE = scannerFile;
     process.env.PORT = String(port);
 
     const { startServer } = require('../server');
@@ -104,7 +107,7 @@ test('API safely serves, reviews, and persists SQLite findings', async () => {
         const baseUrl = `http://127.0.0.1:${port}`;
         const appResponse = await fetch(`${baseUrl}/`);
         const appMarkup = await appResponse.text();
-        const appScript = await (await fetch(`${baseUrl}/app.js?v=20260820-5`)).text();
+        const appScript = await (await fetch(`${baseUrl}/app.js?v=20260821-1`)).text();
 
         assert.equal(appResponse.status, 200);
         assert.match(appMarkup, /id="pdf-scroll"/);
@@ -120,6 +123,12 @@ test('API safely serves, reviews, and persists SQLite findings', async () => {
         assert.match(appScript, /renderProblem\(\{ preservePdf:/);
         assert.match(appMarkup, /id="view-investigate"/);
         assert.match(appMarkup, /id="view-found"/);
+        assert.match(appMarkup, /id="view-projects"/);
+        assert.match(appMarkup, /id="projects-overview"/);
+        assert.match(appMarkup, /id="project-form"/);
+        assert.match(appMarkup, /id="project-folder-button"/);
+        assert.match(appMarkup, /id="project-folder-input"/);
+        assert.match(appMarkup, /webkitdirectory/);
         assert.match(appMarkup, /id="found-overview"/);
         assert.match(appMarkup, /id="found-documents"/);
         assert.match(appMarkup, /id="found-back"/);
@@ -145,8 +154,79 @@ test('API safely serves, reviews, and persists SQLite findings', async () => {
         assert.doesNotMatch(appScript, /togglePdfMetadata/);
         assert.match(appScript, /Der Webserver läuft noch mit der vorherigen Version/);
         assert.match(appScript, /const viewMatches = problemMatchesView\(problem\)/);
+        assert.match(appScript, /function renderProjects\(\)/);
+        assert.match(appScript, /function loadProjectReview\(project/);
+        assert.match(appScript, /async function uploadFilesToProject\(project, files\)/);
 
-        const problemsResponse = await fetch(`${baseUrl}/api/problems`);
+        const initialProjectsPayload = await (await fetch(`${baseUrl}/api/projects`)).json();
+        assert.equal(initialProjectsPayload.projects.length, 1);
+        assert.equal(initialProjectsPayload.projects[0].project, 'fragdenstaat.de');
+        assert.equal(initialProjectsPayload.projects[0].pdf_count, 1);
+
+        const createProjectResponse = await fetch(`${baseUrl}/api/projects`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                project: 'example.test',
+                organization: 'Example Org',
+            }),
+        });
+        const createProjectPayload = await createProjectResponse.json();
+        const secondProjectId = createProjectPayload.project.id;
+        assert.equal(createProjectResponse.status, 201);
+        assert.equal(secondProjectId, 2);
+        assert.equal(createProjectPayload.project.source_type, 'browser-upload');
+
+        const waitForJob = async (projectId, expectedStatus) => {
+            for (let attempt = 0; attempt < 100; attempt++) {
+                const payload = await (await fetch(`${baseUrl}/api/projects`)).json();
+                const project = payload.projects.find(item => item.id === projectId);
+
+                if (project?.latest_job?.status === expectedStatus) return project;
+                await new Promise(resolve => setTimeout(resolve, 20));
+            }
+
+            throw new Error(`Timed out waiting for project ${projectId} job ${expectedStatus}`);
+        };
+
+        const uploadStartResponse = await fetch(`${baseUrl}/api/projects/${secondProjectId}/uploads`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ total_count: 1 }),
+        });
+        const uploadStartPayload = await uploadStartResponse.json();
+        assert.equal(uploadStartResponse.status, 201);
+
+        const uploadResponse = await fetch(
+            `${baseUrl}/api/projects/${secondProjectId}/uploads/${uploadStartPayload.job.id}?filename=456.pdf`,
+            {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/pdf' },
+                body: createFixturePdf(),
+            },
+        );
+        assert.equal(uploadResponse.status, 201);
+
+        const uploadCompleteResponse = await fetch(
+            `${baseUrl}/api/projects/${secondProjectId}/uploads/${uploadStartPayload.job.id}/complete`,
+            {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ error_count: 0 }),
+            },
+        );
+        assert.equal(uploadCompleteResponse.status, 200);
+        const importedProject = await waitForJob(secondProjectId, 'completed');
+        assert.equal(importedProject.pdf_count, 1);
+        assert.equal(importedProject.latest_job.imported_count, 1);
+        assert.equal(await fs.readFile(path.join(pdfRoot, '2', '456.pdf'), 'utf8'), createFixturePdf());
+
+        const scanResponse = await fetch(`${baseUrl}/api/projects/${secondProjectId}/scan`, { method: 'POST' });
+        assert.equal(scanResponse.status, 202);
+        const scannedProject = await waitForJob(secondProjectId, 'completed');
+        assert.equal(scannedProject.latest_job.kind, 'scan');
+
+        const problemsResponse = await fetch(`${baseUrl}/api/problems?project_id=1`);
         const problemsPayload = await problemsResponse.json();
 
         assert.equal(problemsResponse.status, 200);
@@ -162,13 +242,13 @@ test('API safely serves, reviews, and persists SQLite findings', async () => {
         const invalidTextLayerResponse = await fetch(`${baseUrl}/api/pdf-text-layer?filename=123.pdf&page=0`);
         assert.equal(invalidTextLayerResponse.status, 400);
 
-        const textLayerResponse = await fetch(`${baseUrl}/api/pdf-text-layer?filename=123.pdf&page=1&width=600`);
+        const textLayerResponse = await fetch(`${baseUrl}/api/pdf-text-layer?filename=123.pdf&page=1&width=600&project_id=1`);
         const textLayerPayload = await textLayerResponse.json();
         assert.equal(textLayerResponse.status, 200);
         assert.equal(textLayerPayload.coordinate_width, 300);
         assert.equal(textLayerPayload.coordinate_height, 300);
 
-        const renderedPageUrl = `${baseUrl}/api/pdf-page?filename=123.pdf&page=1&width=600`;
+        const renderedPageUrl = `${baseUrl}/api/pdf-page?filename=123.pdf&page=1&width=600&project_id=1`;
         const firstRenderedPage = await fetch(renderedPageUrl);
         assert.equal(firstRenderedPage.status, 200);
         assert.equal(firstRenderedPage.headers.get('x-pdf-cache'), 'MISS');
@@ -182,7 +262,7 @@ test('API safely serves, reviews, and persists SQLite findings', async () => {
         await cachedRenderedPage.arrayBuffer();
 
         const noPageResponse = await fetch(
-            `${baseUrl}/api/recovered-text?problem_id=${encodeURIComponent(problemsPayload.problems[1].problem_id)}`,
+            `${baseUrl}/api/recovered-text?project_id=1&problem_id=${encodeURIComponent(problemsPayload.problems[1].problem_id)}`,
         );
         const noPagePayload = await noPageResponse.json();
         assert.equal(noPageResponse.status, 200);
@@ -190,7 +270,7 @@ test('API safely serves, reviews, and persists SQLite findings', async () => {
         assert.equal(JSON.stringify(noPagePayload).includes('must never leave the server'), false);
 
         const metadataResponse = await fetch(
-            `${baseUrl}/api/pdf-metadata?problem_id=${encodeURIComponent(problemsPayload.problems[1].problem_id)}`,
+            `${baseUrl}/api/pdf-metadata?project_id=1&problem_id=${encodeURIComponent(problemsPayload.problems[1].problem_id)}`,
         );
         const metadataPayload = await metadataResponse.json();
         assert.equal(metadataResponse.status, 200);
@@ -199,7 +279,7 @@ test('API safely serves, reviews, and persists SQLite findings', async () => {
         assert.equal(metadataPayload.info.Title, 'Fixture metadata');
         assert.equal(metadataPayload.info.Author, 'reviewer@example.test');
 
-        const unknownMetadataResponse = await fetch(`${baseUrl}/api/pdf-metadata?problem_id=unknown`);
+        const unknownMetadataResponse = await fetch(`${baseUrl}/api/pdf-metadata?project_id=1&problem_id=unknown`);
         assert.equal(unknownMetadataResponse.status, 404);
 
         const problemId = problemsPayload.problems[0].problem_id;
@@ -207,7 +287,7 @@ test('API safely serves, reviews, and persists SQLite findings', async () => {
             fetch(`${baseUrl}/api/review`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ problem_id: problemId, decision: 'accept' }),
+                body: JSON.stringify({ project_id: 1, problem_id: problemId, decision: 'accept' }),
             });
 
         assert.equal((await accept()).status, 200);
@@ -221,7 +301,7 @@ test('API safely serves, reviews, and persists SQLite findings', async () => {
         const skipResponse = await fetch(`${baseUrl}/api/review`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ problem_id: problemId, decision: 'skip' }),
+            body: JSON.stringify({ project_id: 1, problem_id: problemId, decision: 'skip' }),
         });
 
         assert.equal(skipResponse.status, 200);
@@ -230,16 +310,16 @@ test('API safely serves, reviews, and persists SQLite findings', async () => {
         assert.equal(reviews[0].problem_id, problemId);
         assert.equal(reviews[0].decision, 'skipped');
 
-        const progressPayload = await (await fetch(`${baseUrl}/api/progress`)).json();
+        const progressPayload = await (await fetch(`${baseUrl}/api/progress?project_id=1`)).json();
         assert.equal(progressPayload.reviewed[problemId], 'skipped');
 
-        const pdfResponse = await fetch(`${baseUrl}/pdf/123.pdf`, {
+        const pdfResponse = await fetch(`${baseUrl}/pdf/123.pdf?project_id=1`, {
             headers: { Range: 'bytes=0-4' },
         });
         assert.equal(pdfResponse.status, 206);
         assert.equal(await pdfResponse.text(), '%PDF-');
 
-        const traversalResponse = await fetch(`${baseUrl}/pdf/%2e%2e%2fproblems.json`);
+        const traversalResponse = await fetch(`${baseUrl}/pdf/%2e%2e%2fproblems.json?project_id=1`);
         assert.equal(traversalResponse.status, 400);
 
         const forensicJsonFiles = (await fs.readdir(temporaryDirectory)).filter(file => file.endsWith('.json'));

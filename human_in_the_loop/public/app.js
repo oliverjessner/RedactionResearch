@@ -1,5 +1,10 @@
 const state = {
-    view: 'investigate',
+    view: 'projects',
+    projects: [],
+    activeProject: null,
+    projectPollTimer: null,
+    newProjectFiles: [],
+    uploadTargetProject: null,
     foundDetail: false,
     problems: [],
     filtered: [],
@@ -62,6 +67,20 @@ const elements = Object.fromEntries(
         'pdf-zoom-out',
         'previous',
         'problem-documents-count',
+        'progress-block',
+        'filters',
+        'organization-input',
+        'project-create',
+        'project-folder-button',
+        'project-folder-input',
+        'project-folder-status',
+        'project-form',
+        'project-input',
+        'project-list',
+        'project-message',
+        'project-upload-input',
+        'projects-empty',
+        'projects-overview',
         'project-detail',
         'project-name',
         'recovered-status',
@@ -81,6 +100,7 @@ const elements = Object.fromEntries(
         'viewer-page-findings',
         'view-found',
         'view-investigate',
+        'view-projects',
         'viewer-panel',
         'workspace',
     ].map(id => [id, document.getElementById(id)]),
@@ -123,20 +143,277 @@ function setBusy(busy) {
     }
 }
 
+function setProjectMessage(text, kind = '') {
+    elements['project-message'].textContent = text;
+    elements['project-message'].className = `project-message ${kind}`.trim();
+}
+
+async function fetchJson(url, options) {
+    const response = await fetch(url, options);
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok) throw new Error(payload.error || `Anfrage fehlgeschlagen (${response.status})`);
+
+    return payload;
+}
+
+function projectJobText(job) {
+    if (!job) return 'Noch kein Import oder Scan gestartet.';
+
+    const kind = job.kind === 'import' ? 'Import' : 'Forensic-Scan';
+    const statusLabels = {
+        queued: 'wartet',
+        running: 'läuft',
+        completed: 'abgeschlossen',
+        failed: 'fehlgeschlagen',
+    };
+    const progress = job.total_count > 0 ? ` · ${job.processed_count}/${job.total_count}` : '';
+    const detail = job.error_message || job.message;
+
+    return `${kind} ${statusLabels[job.status] || job.status}${progress}${detail ? ` · ${detail}` : ''}`;
+}
+
+function projectAction(label, className, disabled, handler) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = `button ${className}`;
+    button.textContent = label;
+    button.disabled = disabled;
+    button.addEventListener('click', handler);
+    return button;
+}
+
+function selectedPdfFiles(fileList) {
+    return [...(fileList || [])].filter(file => file.name.toLowerCase().endsWith('.pdf'));
+}
+
+function folderSelectionText(files) {
+    if (files.length === 0) return 'Keine PDFs im Ordner gefunden';
+
+    const relativePath = files[0].webkitRelativePath || '';
+    const folderName = relativePath.includes('/') ? relativePath.split('/')[0] : null;
+    const count = `${files.length} PDF${files.length === 1 ? '' : 's'}`;
+
+    return folderName ? `${folderName} · ${count}` : count;
+}
+
+function openProjectUploadDialog(project) {
+    state.uploadTargetProject = project;
+    elements['project-upload-input'].value = '';
+    elements['project-upload-input'].click();
+}
+
+async function uploadFilesToProject(project, files) {
+    const pdfFiles = selectedPdfFiles(files);
+
+    if (pdfFiles.length === 0) throw new Error('Der ausgewählte Ordner enthält keine PDFs.');
+
+    const startPayload = await fetchJson(`/api/projects/${project.id}/uploads`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ total_count: pdfFiles.length }),
+    });
+    const jobId = startPayload.job.id;
+    let nextIndex = 0;
+    let completed = 0;
+    let failed = 0;
+
+    await refreshProjects();
+
+    async function uploadWorker() {
+        while (nextIndex < pdfFiles.length) {
+            const file = pdfFiles[nextIndex++];
+
+            try {
+                await fetchJson(
+                    `/api/projects/${project.id}/uploads/${jobId}?filename=${encodeURIComponent(file.name)}`,
+                    {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/pdf' },
+                        body: file,
+                    },
+                );
+            } catch {
+                failed++;
+            }
+
+            completed++;
+            setProjectMessage(`${completed} von ${pdfFiles.length} PDFs werden importiert …`);
+        }
+    }
+
+    const workerCount = Math.min(3, pdfFiles.length);
+    await Promise.all(Array.from({ length: workerCount }, () => uploadWorker()));
+    await fetchJson(`/api/projects/${project.id}/uploads/${jobId}/complete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ error_count: failed }),
+    });
+    await refreshProjects();
+
+    if (failed > 0) {
+        setProjectMessage(`${pdfFiles.length - failed} PDFs importiert, ${failed} fehlgeschlagen.`, 'error');
+    } else {
+        setProjectMessage(`${pdfFiles.length} PDFs wurden lokal importiert.`, 'success');
+    }
+}
+
+function renderProjects() {
+    elements['project-list'].replaceChildren();
+    elements['projects-empty'].hidden = state.projects.length > 0;
+
+    for (const project of state.projects) {
+        const card = document.createElement('article');
+        const heading = document.createElement('div');
+        const headingText = document.createElement('div');
+        const title = document.createElement('h3');
+        const organization = document.createElement('p');
+        const id = document.createElement('span');
+        const source = document.createElement('p');
+        const stats = document.createElement('div');
+        const job = document.createElement('div');
+        const actions = document.createElement('div');
+        const activeJob = ['queued', 'running'].includes(project.latest_job?.status);
+        const statValues = [
+            ['PDFs', project.pdf_count],
+            ['Problem-PDFs', project.problem_documents],
+            ['Bestätigt', project.accepted],
+            ['Offen', project.open],
+        ];
+
+        card.className = 'project-card';
+        heading.className = 'project-card-heading';
+        title.textContent = project.project;
+        organization.textContent = project.organization || 'Organisation nicht angegeben';
+        id.className = 'project-id';
+        id.textContent = `ID ${project.id}`;
+        headingText.append(title, organization);
+        heading.append(headingText, id);
+        source.className = 'project-source';
+        source.textContent = project.source_location
+            ? `PDF-Quelle: ${project.source_location}`
+            : project.source_type === 'browser-upload'
+              ? 'PDF-Quelle: über lokalen Ordnerdialog importiert'
+              : 'PDF-Quelle: verwalteter Projektordner';
+        stats.className = 'project-stats';
+
+        for (const [label, value] of statValues) {
+            const stat = document.createElement('div');
+            const number = document.createElement('b');
+            const caption = document.createElement('span');
+            stat.className = 'project-stat';
+            number.textContent = value;
+            caption.textContent = label;
+            stat.append(number, caption);
+            stats.append(stat);
+        }
+
+        job.className = `project-job ${project.latest_job?.status || ''}`.trim();
+        job.textContent = projectJobText(project.latest_job);
+        actions.className = 'project-actions';
+        actions.append(
+            projectAction('Review öffnen', 'button-secondary', false, () => loadProjectReview(project)),
+            projectAction('PDFs hinzufügen', 'button-secondary', activeJob, () =>
+                openProjectUploadDialog(project),
+            ),
+            projectAction('Forensic-Run', 'button-accept', activeJob || project.pdf_count === 0, () =>
+                startProjectJob(project, 'scan'),
+            ),
+        );
+        card.append(heading, source, stats, job, actions);
+        elements['project-list'].append(card);
+    }
+}
+
+function scheduleProjectPolling() {
+    window.clearTimeout(state.projectPollTimer);
+    state.projectPollTimer = null;
+
+    if (!state.projects.some(project => ['queued', 'running'].includes(project.latest_job?.status))) return;
+
+    state.projectPollTimer = window.setTimeout(async () => {
+        try {
+            await refreshProjects();
+        } catch (error) {
+            setProjectMessage(error.message, 'error');
+        } finally {
+            scheduleProjectPolling();
+        }
+    }, 1500);
+}
+
+async function refreshProjects() {
+    const payload = await fetchJson('/api/projects');
+    state.projects = Array.isArray(payload.projects) ? payload.projects : [];
+
+    if (state.activeProject) {
+        state.activeProject = state.projects.find(project => project.id === state.activeProject.id) || null;
+    }
+
+    renderProjects();
+}
+
+async function startProjectJob(project, kind) {
+    setProjectMessage(kind === 'import' ? 'Import wird gestartet …' : 'Forensic-Run wird gestartet …');
+
+    try {
+        await fetchJson(`/api/projects/${project.id}/${kind}`, { method: 'POST' });
+        await refreshProjects();
+        scheduleProjectPolling();
+        setProjectMessage(kind === 'import' ? 'Import läuft im Hintergrund.' : 'Forensic-Scan läuft im Hintergrund.', 'success');
+    } catch (error) {
+        setProjectMessage(error.message, 'error');
+    }
+}
+
+async function loadProjectReview(project, view = 'investigate') {
+    setProjectMessage(`Projekt ${project.project} wird geöffnet …`);
+
+    try {
+        const query = `project_id=${encodeURIComponent(project.id)}`;
+        const [problemsPayload, progressPayload] = await Promise.all([
+            fetchJson(`/api/problems?${query}`),
+            fetchJson(`/api/progress?${query}`),
+        ]);
+
+        state.activeProject = project;
+        state.problems = Array.isArray(problemsPayload.problems) ? problemsPayload.problems : [];
+        state.reviewed = progressPayload.reviewed && typeof progressPayload.reviewed === 'object' ? progressPayload.reviewed : {};
+        state.recoveredText.clear();
+        state.metadataCache.clear();
+        state.view = view;
+        state.foundDetail = false;
+        elements['severity-filter'].value = 'all';
+        elements['type-filter'].value = 'all';
+        populateTypeFilter();
+        setProjectMessage('');
+        setMessage(state.problems.length ? '' : 'Für dieses Projekt wurden noch keine Verdachtsfälle gefunden.');
+        applyFilters();
+    } catch (error) {
+        setProjectMessage(error.message, 'error');
+    }
+}
+
 function renderViewControls() {
+    const projectsView = state.view === 'projects';
     const foundView = state.view === 'found';
     const foundOverview = foundView && !state.foundDetail;
 
-    elements['view-investigate'].classList.toggle('active', !foundView);
-    elements['view-investigate'].setAttribute('aria-selected', String(!foundView));
+    elements['view-projects'].classList.toggle('active', projectsView);
+    elements['view-projects'].setAttribute('aria-selected', String(projectsView));
+    elements['view-investigate'].classList.toggle('active', state.view === 'investigate');
+    elements['view-investigate'].setAttribute('aria-selected', String(state.view === 'investigate'));
     elements['view-found'].classList.toggle('active', foundView);
     elements['view-found'].setAttribute('aria-selected', String(foundView));
-    elements.accept.hidden = foundView;
-    elements.skip.hidden = foundView;
+    elements['projects-overview'].hidden = !projectsView;
+    elements['progress-block'].hidden = projectsView;
+    elements.filters.hidden = projectsView;
+    elements.accept.hidden = foundView || projectsView;
+    elements.skip.hidden = foundView || projectsView;
     elements['found-back'].hidden = !foundView || foundOverview;
     elements['found-overview'].hidden = !foundOverview;
-    elements['viewer-panel'].hidden = foundOverview;
-    elements['review-panel'].hidden = foundOverview;
+    elements['viewer-panel'].hidden = projectsView || foundOverview;
+    elements['review-panel'].hidden = projectsView || foundOverview;
     elements['project-detail'].hidden = !foundView;
     elements['review-actions'].classList.toggle('found-view', foundView);
 }
@@ -240,7 +517,7 @@ function showFoundOverview() {
 function pdfUrl(problem) {
     const pageFragment = Number.isFinite(problem.page) && problem.page > 0 ? `#page=${problem.page}` : '';
 
-    return `/pdf/${encodeURIComponent(problem.file)}${pageFragment}`;
+    return `/pdf/${encodeURIComponent(problem.file)}?project_id=${encodeURIComponent(state.activeProject.id)}${pageFragment}`;
 }
 
 function updatePdfControls() {
@@ -377,7 +654,8 @@ async function loadPdfTextLayer(pageElement, pageNumber, requestId) {
     try {
         const response = await fetch(
             `/api/pdf-text-layer?filename=${encodeURIComponent(state.pdfFile)}` +
-                `&page=${pageNumber}&width=${PDF_RENDER_WIDTH}&schema=2`,
+                `&page=${pageNumber}&width=${PDF_RENDER_WIDTH}&schema=2` +
+                `&project_id=${encodeURIComponent(state.activeProject.id)}`,
         );
         const payload = await response.json();
 
@@ -576,7 +854,8 @@ function loadPdfPage(pageElement) {
     };
     image.src =
         `/api/pdf-page?filename=${encodeURIComponent(state.pdfFile)}` +
-        `&page=${pageNumber}&width=${PDF_RENDER_WIDTH}`;
+        `&page=${pageNumber}&width=${PDF_RENDER_WIDTH}` +
+        `&project_id=${encodeURIComponent(state.activeProject.id)}`;
 }
 
 function renderPdfDocument() {
@@ -753,7 +1032,8 @@ function resetRecoveredText() {
 
 async function renderRecoveredText(problem) {
     const requestId = ++state.recoveryRequest;
-    const cached = state.recoveredText.get(problem.problem_id);
+    const cacheKey = `${state.activeProject.id}:${problem.problem_id}`;
+    const cached = state.recoveredText.get(cacheKey);
 
     resetRecoveredText();
 
@@ -761,14 +1041,17 @@ async function renderRecoveredText(problem) {
         let payload = cached;
 
         if (!payload) {
-            const response = await fetch(`/api/recovered-text?problem_id=${encodeURIComponent(problem.problem_id)}`);
+            const response = await fetch(
+                `/api/recovered-text?problem_id=${encodeURIComponent(problem.problem_id)}` +
+                    `&project_id=${encodeURIComponent(state.activeProject.id)}`,
+            );
             payload = await response.json();
 
             if (!response.ok) {
                 throw new Error(payload.error || 'Text konnte nicht rekonstruiert werden');
             }
 
-            state.recoveredText.set(problem.problem_id, payload);
+            state.recoveredText.set(cacheKey, payload);
         }
 
         if (requestId !== state.recoveryRequest || currentProblem()?.problem_id !== problem.problem_id) {
@@ -836,12 +1119,16 @@ function renderMetadataWithEmailHighlights(formatted) {
 
 async function renderPdfMetadata(problem) {
     const requestId = ++state.metadataRequest;
+    const cacheKey = `${state.activeProject.id}:${problem.file}`;
 
     try {
-        let payload = state.metadataCache.get(problem.file);
+        let payload = state.metadataCache.get(cacheKey);
 
         if (!payload) {
-            const response = await fetch(`/api/pdf-metadata?problem_id=${encodeURIComponent(problem.problem_id)}`);
+            const response = await fetch(
+                `/api/pdf-metadata?problem_id=${encodeURIComponent(problem.problem_id)}` +
+                    `&project_id=${encodeURIComponent(state.activeProject.id)}`,
+            );
             const contentType = response.headers.get('content-type') || '';
 
             if (!contentType.includes('application/json')) {
@@ -858,7 +1145,7 @@ async function renderPdfMetadata(problem) {
                 throw new Error(payload.error || 'Metadaten konnten nicht gelesen werden');
             }
 
-            state.metadataCache.set(problem.file, payload);
+            state.metadataCache.set(cacheKey, payload);
         }
 
         if (requestId !== state.metadataRequest || currentProblem()?.problem_id !== problem.problem_id) return;
@@ -986,7 +1273,22 @@ function applyFilters({ preserveProblemId = null } = {}) {
 }
 
 function switchView(view) {
-    if (!['investigate', 'found'].includes(view) || state.view === view) return;
+    if (!['projects', 'investigate', 'found'].includes(view) || state.view === view) return;
+
+    if (view === 'projects') {
+        state.view = view;
+        state.foundDetail = false;
+        setMessage('');
+        renderViewControls();
+        renderProjects();
+        void refreshProjects().then(scheduleProjectPolling).catch(error => setProjectMessage(error.message, 'error'));
+        return;
+    }
+
+    if (!state.activeProject) {
+        setProjectMessage('Öffne zuerst ein Projekt.', 'error');
+        return;
+    }
 
     state.view = view;
     state.foundDetail = false;
@@ -996,6 +1298,10 @@ function switchView(view) {
 
 function populateTypeFilter() {
     const types = [...new Set(state.problems.map(problem => problem.type))].sort();
+
+    while (elements['type-filter'].options.length > 1) {
+        elements['type-filter'].remove(1);
+    }
 
     for (const type of types) {
         const option = document.createElement('option');
@@ -1040,6 +1346,7 @@ async function saveDecision(decision) {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
+                project_id: state.activeProject.id,
                 problem_id: problem.problem_id,
                 decision,
             }),
@@ -1062,31 +1369,17 @@ async function saveDecision(decision) {
 
 async function initialize() {
     try {
-        const [problemsResponse, progressResponse] = await Promise.all([fetch('/api/problems'), fetch('/api/progress')]);
-
-        if (!problemsResponse.ok || !progressResponse.ok) {
-            throw new Error('Review-Daten konnten nicht geladen werden');
-        }
-
-        const problemsPayload = await problemsResponse.json();
-        const progressPayload = await progressResponse.json();
-
-        state.problems = Array.isArray(problemsPayload.problems) ? problemsPayload.problems : [];
-        state.reviewed = progressPayload.reviewed && typeof progressPayload.reviewed === 'object' ? progressPayload.reviewed : {};
-
-        populateTypeFilter();
-        applyFilters();
-        setMessage(state.problems.length ? '' : 'Keine Verdachtsfälle gefunden.');
+        renderViewControls();
+        await refreshProjects();
+        scheduleProjectPolling();
     } catch (error) {
-        elements['review-empty'].innerHTML = `<strong>Fehler beim Laden</strong><p>${error.message}</p>`;
-        elements['empty-viewer'].innerHTML = '<p>PDF-Viewer nicht verfügbar.</p>';
-        setMessage(error.message, 'error');
-        setBusy(false);
+        setProjectMessage(error.message, 'error');
     }
 }
 
 elements.previous.addEventListener('click', () => move(-1));
 elements.next.addEventListener('click', () => move(1));
+elements['view-projects'].addEventListener('click', () => switchView('projects'));
 elements['view-investigate'].addEventListener('click', () => switchView('investigate'));
 elements['view-found'].addEventListener('click', () => switchView('found'));
 elements['found-back'].addEventListener('click', showFoundOverview);
@@ -1103,6 +1396,63 @@ elements['coordinate-form'].addEventListener('submit', event => {
 });
 elements['coordinate-clear'].addEventListener('click', () => clearCoordinateBox());
 elements['coordinate-input'].addEventListener('input', () => elements['coordinate-input'].setCustomValidity(''));
+elements['project-folder-button'].addEventListener('click', () => elements['project-folder-input'].click());
+elements['project-folder-input'].addEventListener('change', event => {
+    state.newProjectFiles = selectedPdfFiles(event.target.files);
+    elements['project-folder-status'].textContent = folderSelectionText(state.newProjectFiles);
+});
+elements['project-upload-input'].addEventListener('change', async event => {
+    const project = state.uploadTargetProject;
+    const files = selectedPdfFiles(event.target.files);
+    state.uploadTargetProject = null;
+
+    if (!project || files.length === 0) {
+        if (project) setProjectMessage('Der ausgewählte Ordner enthält keine PDFs.', 'error');
+        return;
+    }
+
+    setProjectMessage(`${files.length} PDFs werden für ${project.project} vorbereitet …`);
+    try {
+        await uploadFilesToProject(project, files);
+    } catch (error) {
+        await refreshProjects().catch(() => {});
+        setProjectMessage(error.message, 'error');
+    }
+});
+elements['project-form'].addEventListener('submit', async event => {
+    event.preventDefault();
+
+    const files = [...state.newProjectFiles];
+    if (files.length === 0) {
+        setProjectMessage('Bitte zuerst einen Ordner mit PDFs auswählen.', 'error');
+        elements['project-folder-button'].focus();
+        return;
+    }
+
+    elements['project-create'].disabled = true;
+    setProjectMessage('Projekt wird angelegt …');
+
+    try {
+        const payload = await fetchJson('/api/projects', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                project: elements['project-input'].value,
+                organization: elements['organization-input'].value,
+            }),
+        });
+
+        elements['project-form'].reset();
+        state.newProjectFiles = [];
+        elements['project-folder-status'].textContent = 'Kein Ordner ausgewählt';
+        await uploadFilesToProject(payload.project, files);
+    } catch (error) {
+        await refreshProjects().catch(() => {});
+        setProjectMessage(error.message, 'error');
+    } finally {
+        elements['project-create'].disabled = false;
+    }
+});
 elements['pdf-scroll'].addEventListener('scroll', () => {
     if (state.pdfScrollFrame !== null) return;
 

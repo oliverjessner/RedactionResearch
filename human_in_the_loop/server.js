@@ -1,16 +1,24 @@
 const fs = require('node:fs/promises');
 const path = require('node:path');
+const { createReadStream } = require('node:fs');
+const { spawn } = require('node:child_process');
+const { createHash, randomUUID } = require('node:crypto');
 
 const { createCanvas } = require('@napi-rs/canvas');
 const express = require('express');
 const {
-    DEFAULT_PROJECT,
+    createProject,
+    createProjectJob,
+    failStaleProjectJobs,
     getProblem: getDatabaseProblem,
-    getProjectId,
+    getProject,
+    getProjectJob,
     listProblems: listDatabaseProblems,
+    listProjects: listDatabaseProjects,
     listReviewDecisions,
     openForensicDatabase,
     saveReview,
+    updateProjectJob,
 } = require('../lib/forensic-db.js');
 const {
     FORENSIC_RENDER_SCALE,
@@ -24,10 +32,12 @@ const APP_DIR = __dirname;
 const PROJECT_DIR = path.resolve(APP_DIR, '..');
 const OUTPUT_DIR = path.join(PROJECT_DIR, 'output');
 const FORENSIC_DIR = path.join(OUTPUT_DIR, 'forensic');
-const PDF_ROOT = path.join(OUTPUT_DIR, 'download', 'pdfs');
+const PDF_ROOT = path.resolve(process.env.HITL_PDF_ROOT || path.join(OUTPUT_DIR, 'download', 'pdfs'));
 
 const DATABASE_FILE = path.resolve(process.env.HITL_DATABASE_FILE || path.join(FORENSIC_DIR, 'forensic.sqlite'));
-const PROJECT = process.env.HITL_PROJECT || DEFAULT_PROJECT;
+const SCANNER_FILE = path.resolve(
+    process.env.HITL_SCANNER_FILE || path.join(PROJECT_DIR, 'runs', 'fragdenstaat', 'forensic.mjs'),
+);
 const PDFJS_ROOT = path.dirname(require.resolve('pdfjs-dist/package.json'));
 const PDFJS_CMAP_URL = `${path.join(PDFJS_ROOT, 'cmaps')}${path.sep}`;
 const PDFJS_STANDARD_FONT_URL = `${path.join(PDFJS_ROOT, 'standard_fonts')}${path.sep}`;
@@ -41,14 +51,7 @@ const PDF_BROWSER_CACHE = 'private, max-age=3600';
 const HOST = process.env.HOST || '127.0.0.1';
 const PORT = Number(process.env.PORT || 3000);
 const database = openForensicDatabase(DATABASE_FILE);
-const PROJECT_ID = getProjectId(database, PROJECT);
-
-if (!PROJECT_ID) {
-    database.close();
-    throw new Error(`Unknown forensic project: ${PROJECT}`);
-}
-
-const PDF_DIR = path.resolve(process.env.HITL_PDF_DIR || path.join(PDF_ROOT, String(PROJECT_ID)));
+failStaleProjectJobs(database);
 
 const ALLOWED_EVIDENCE_KEYS = new Set([
     'affected_text_items',
@@ -69,6 +72,35 @@ function isPlainObject(value) {
 
 function stringOrNull(value) {
     return typeof value === 'string' && value.trim() ? value.trim() : null;
+}
+
+function httpError(message, status = 400) {
+    const error = new Error(message);
+    error.status = status;
+    return error;
+}
+
+function parseProjectId(value) {
+    const projectId = Number(value);
+
+    if (!Number.isInteger(projectId) || projectId < 1) {
+        throw httpError('project_id must be a positive integer');
+    }
+
+    return projectId;
+}
+
+function requireProject(value) {
+    const projectId = parseProjectId(value);
+    const project = getProject(database, projectId);
+
+    if (!project) throw httpError('Unknown project_id', 404);
+
+    return project;
+}
+
+function projectPdfDirectory(projectId) {
+    return path.join(PDF_ROOT, String(projectId));
 }
 
 function sanitizeArray(value, depth = 0) {
@@ -211,15 +243,23 @@ function textItemToLayerItem(item, styles, viewport, Util) {
     };
 }
 
-async function resolvePdfPath(filename) {
+async function resolvePdfPath(projectId, filename) {
     if (!/^[a-zA-Z0-9._-]+\.pdf$/i.test(filename) || path.basename(filename) !== filename) {
         const error = new Error('Invalid PDF filename');
         error.status = 400;
         throw error;
     }
 
-    const pdfRoot = await fs.realpath(PDF_DIR);
-    const pdfPath = await fs.realpath(path.join(pdfRoot, filename));
+    let pdfRoot;
+    let pdfPath;
+
+    try {
+        pdfRoot = await fs.realpath(projectPdfDirectory(projectId));
+        pdfPath = await fs.realpath(path.join(pdfRoot, filename));
+    } catch (error) {
+        if (error.code === 'ENOENT') throw httpError('PDF not found', 404);
+        throw error;
+    }
 
     if (!pdfPath.startsWith(`${pdfRoot}${path.sep}`)) {
         const error = new Error('PDF path is outside the allowed directory');
@@ -241,8 +281,8 @@ function getPdfjs() {
     return pdfjsPromise;
 }
 
-async function resolvePdfDescriptor(filename) {
-    const pdfPath = await resolvePdfPath(filename);
+async function resolvePdfDescriptor(projectId, filename) {
+    const pdfPath = await resolvePdfPath(projectId, filename);
     const stats = await fs.stat(pdfPath);
 
     return {
@@ -428,7 +468,7 @@ async function closePdfCaches() {
     );
 }
 
-async function recoverTextForProblem(problem) {
+async function recoverTextForProblem(projectId, problem) {
     if (!Number.isInteger(problem.page) || problem.page < 1) {
         return {
             available: false,
@@ -447,7 +487,7 @@ async function recoverTextForProblem(problem) {
         };
     }
 
-    const [{ Util }, descriptor] = await Promise.all([getPdfjs(), resolvePdfDescriptor(problem.file)]);
+    const [{ Util }, descriptor] = await Promise.all([getPdfjs(), resolvePdfDescriptor(projectId, problem.file)]);
 
     return withPdfDocument(descriptor, async pdfDocument => {
         if (problem.page > pdfDocument.numPages) {
@@ -478,8 +518,8 @@ async function recoverTextForProblem(problem) {
     });
 }
 
-async function readPdfMetadata(problem) {
-    const descriptor = await resolvePdfDescriptor(problem.file);
+async function readPdfMetadata(projectId, problem) {
+    const descriptor = await resolvePdfDescriptor(projectId, problem.file);
 
     return withPdfDocument(descriptor, async pdfDocument => {
         const metadata = await pdfDocument.getMetadata();
@@ -497,11 +537,296 @@ async function readPdfMetadata(problem) {
     });
 }
 
-async function loadProblems() {
-    return listDatabaseProblems(database, PROJECT).map(problem => ({
+async function loadProblems(project) {
+    return listDatabaseProblems(database, project.project).map(problem => ({
         ...problem,
         evidence: sanitizeEvidence(problem.evidence),
     }));
+}
+
+async function countProjectPdfs(projectId) {
+    try {
+        const entries = await fs.readdir(projectPdfDirectory(projectId), { withFileTypes: true });
+        return entries.filter(entry => entry.isFile() && entry.name.toLowerCase().endsWith('.pdf')).length;
+    } catch (error) {
+        if (error.code === 'ENOENT') return 0;
+        throw error;
+    }
+}
+
+async function listProjects() {
+    return Promise.all(
+        listDatabaseProjects(database).map(async project => ({
+            ...project,
+            pdf_count: await countProjectPdfs(project.id),
+        })),
+    );
+}
+
+async function collectPdfFiles(directory) {
+    const files = [];
+    const entries = await fs.readdir(directory, { withFileTypes: true });
+
+    for (const entry of entries) {
+        const entryPath = path.join(directory, entry.name);
+
+        if (entry.isDirectory()) {
+            files.push(...(await collectPdfFiles(entryPath)));
+        } else if (entry.isFile() && entry.name.toLowerCase().endsWith('.pdf')) {
+            files.push(entryPath);
+        }
+    }
+
+    return files.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+}
+
+function safePdfFilename(fileName) {
+    const baseName = path.basename(fileName);
+    const sourceName = path.basename(baseName, path.extname(baseName));
+    const safeStem = sourceName
+        .normalize('NFKD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-zA-Z0-9._-]+/g, '_')
+        .replace(/^\.+|\.+$/g, '')
+        .slice(0, 160);
+
+    return `${safeStem || 'document'}.pdf`;
+}
+
+function fileHash(filePath) {
+    return new Promise((resolve, reject) => {
+        const hash = createHash('sha256');
+        const stream = createReadStream(filePath);
+
+        stream.on('error', reject);
+        stream.on('data', chunk => hash.update(chunk));
+        stream.on('end', () => resolve(hash.digest('hex')));
+    });
+}
+
+async function fileExists(filePath) {
+    try {
+        await fs.access(filePath);
+        return true;
+    } catch (error) {
+        if (error.code === 'ENOENT') return false;
+        throw error;
+    }
+}
+
+async function importPdf(sourceFile, targetDirectory, requestedName = path.basename(sourceFile)) {
+    const safeName = safePdfFilename(requestedName);
+    let targetFile = path.join(targetDirectory, safeName);
+
+    if (!(await fileExists(targetFile))) {
+        await fs.copyFile(sourceFile, targetFile);
+        return { imported: true, file: safeName };
+    }
+
+    const sourceHash = await fileHash(sourceFile);
+
+    if ((await fileHash(targetFile)) === sourceHash) {
+        return { imported: false, file: safeName };
+    }
+
+    const stem = path.basename(safeName, '.pdf');
+    let suffix = sourceHash.slice(0, 10);
+    let attempt = 0;
+
+    while (true) {
+        const candidateName = `${stem}-${suffix}${attempt ? `-${attempt}` : ''}.pdf`;
+        targetFile = path.join(targetDirectory, candidateName);
+
+        if (!(await fileExists(targetFile))) {
+            await fs.copyFile(sourceFile, targetFile);
+            return { imported: true, file: candidateName };
+        }
+
+        if ((await fileHash(targetFile)) === sourceHash) {
+            return { imported: false, file: candidateName };
+        }
+
+        attempt++;
+    }
+}
+
+const MAX_UPLOAD_BYTES = 1024 * 1024 * 1024;
+
+async function receiveUploadedPdf(request, projectId, requestedName) {
+    if (!requestedName || !requestedName.toLowerCase().endsWith('.pdf') || requestedName.length > 255) {
+        throw httpError('Ein gültiger PDF-Dateiname ist erforderlich.');
+    }
+
+    const contentLength = Number(request.headers['content-length']);
+    if (Number.isFinite(contentLength) && contentLength > MAX_UPLOAD_BYTES) {
+        throw httpError('Das PDF ist größer als 1 GB.', 413);
+    }
+
+    const targetDirectory = projectPdfDirectory(projectId);
+    await fs.mkdir(targetDirectory, { recursive: true });
+    const temporaryFile = path.join(targetDirectory, `.upload-${randomUUID()}.tmp`);
+    const handle = await fs.open(temporaryFile, 'wx');
+    let totalBytes = 0;
+    let header = Buffer.alloc(0);
+    let uploadError = null;
+
+    try {
+        for await (const chunk of request) {
+            totalBytes += chunk.length;
+            if (totalBytes > MAX_UPLOAD_BYTES) throw httpError('Das PDF ist größer als 1 GB.', 413);
+            if (header.length < 1024) header = Buffer.concat([header, chunk]).subarray(0, 1024);
+            await handle.write(chunk);
+        }
+    } catch (error) {
+        uploadError = error;
+    } finally {
+        await handle.close();
+    }
+
+    if (uploadError) {
+        await fs.unlink(temporaryFile).catch(() => {});
+        throw uploadError;
+    }
+
+    try {
+        if (totalBytes === 0 || !header.includes(Buffer.from('%PDF-'))) {
+            throw httpError('Die ausgewählte Datei ist kein gültiges PDF.');
+        }
+
+        return await importPdf(temporaryFile, targetDirectory, requestedName);
+    } finally {
+        await fs.unlink(temporaryFile).catch(() => {});
+    }
+}
+
+function requireUploadJob(projectId, jobId) {
+    const job = getProjectJob(database, projectId, Number(jobId));
+
+    if (!job || job.kind !== 'import') throw httpError('Unknown upload job', 404);
+    if (!['queued', 'running'].includes(job.status)) throw httpError('Dieser Upload ist bereits beendet.', 409);
+
+    return job;
+}
+
+async function runImportJob(project, jobId) {
+    try {
+        updateProjectJob(database, jobId, { status: 'running', message: 'PDFs werden gesucht …' });
+        const sourceLocation = path.resolve(project.source_location);
+        const sourceStats = await fs.stat(sourceLocation);
+
+        if (!sourceStats.isDirectory()) throw new Error('Die konfigurierte PDF-Quelle ist kein Ordner.');
+
+        const sourceFiles = await collectPdfFiles(sourceLocation);
+        const targetDirectory = projectPdfDirectory(project.id);
+        await fs.mkdir(targetDirectory, { recursive: true });
+
+        let imported = 0;
+        let skipped = 0;
+        let errors = 0;
+
+        updateProjectJob(database, jobId, {
+            status: 'running',
+            total_count: sourceFiles.length,
+            message: `${sourceFiles.length} PDFs gefunden`,
+        });
+
+        for (const [index, sourceFile] of sourceFiles.entries()) {
+            try {
+                const result = await importPdf(sourceFile, targetDirectory);
+                if (result.imported) imported++;
+                else skipped++;
+            } catch {
+                errors++;
+            }
+
+            const processed = index + 1;
+            if (processed % 25 === 0 || processed === sourceFiles.length) {
+                updateProjectJob(database, jobId, {
+                    status: 'running',
+                    total_count: sourceFiles.length,
+                    processed_count: processed,
+                    imported_count: imported,
+                    skipped_count: skipped,
+                    error_count: errors,
+                    message: `${processed} von ${sourceFiles.length} PDFs verarbeitet`,
+                });
+            }
+        }
+
+        updateProjectJob(database, jobId, {
+            status: 'completed',
+            total_count: sourceFiles.length,
+            processed_count: sourceFiles.length,
+            imported_count: imported,
+            skipped_count: skipped,
+            error_count: errors,
+            message: `${imported} importiert, ${skipped} bereits vorhanden${errors ? `, ${errors} Fehler` : ''}`,
+        });
+    } catch (error) {
+        updateProjectJob(database, jobId, {
+            status: 'failed',
+            message: 'Import fehlgeschlagen',
+            error_message: String(error?.message || error).slice(0, 1000),
+        });
+    }
+}
+
+function runScanJob(project, jobId) {
+    updateProjectJob(database, jobId, { status: 'running', message: 'Forensic-Scanner wird gestartet …' });
+    const child = spawn(process.execPath, [SCANNER_FILE, '--project', project.project], {
+        cwd: PROJECT_DIR,
+        env: {
+            ...process.env,
+            FORENSIC_DATABASE_FILE: DATABASE_FILE,
+            FORENSIC_OUTPUT_DIR: OUTPUT_DIR,
+            FORENSIC_PDF_ROOT: PDF_ROOT,
+        },
+        shell: false,
+        stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    let settled = false;
+    let bufferedOutput = '';
+    let lastMessage = 'Forensic-Scan läuft …';
+
+    const consumeOutput = chunk => {
+        bufferedOutput = `${bufferedOutput}${chunk}`.slice(-8000);
+        const lines = bufferedOutput.split(/\r?\n/);
+        bufferedOutput = lines.pop() || '';
+        const usefulLine = lines.map(line => line.trim()).filter(Boolean).at(-1);
+
+        if (usefulLine) {
+            lastMessage = usefulLine.slice(0, 500);
+            const progress = usefulLine.match(/^\[(\d+)\/(\d+)\]/);
+            updateProjectJob(database, jobId, {
+                status: 'running',
+                ...(progress
+                    ? { processed_count: Number(progress[1]), total_count: Number(progress[2]) }
+                    : {}),
+                message: lastMessage,
+            });
+        }
+    };
+
+    child.stdout.on('data', consumeOutput);
+    child.stderr.on('data', consumeOutput);
+    child.on('error', error => {
+        if (settled) return;
+        settled = true;
+        updateProjectJob(database, jobId, {
+            status: 'failed',
+            message: 'Scanner konnte nicht gestartet werden',
+            error_message: String(error?.message || error).slice(0, 1000),
+        });
+    });
+    child.on('close', code => {
+        if (settled) return;
+        settled = true;
+        updateProjectJob(database, jobId, {
+            status: code === 0 ? 'completed' : 'failed',
+            message: code === 0 ? 'Forensic-Scan abgeschlossen' : 'Forensic-Scan fehlgeschlagen',
+            error_message: code === 0 ? null : `${lastMessage} (Exit ${code})`.slice(0, 1000),
+        });
+    });
 }
 
 const app = express();
@@ -514,11 +839,181 @@ app.get('/', (request, response) => {
     response.sendFile(path.join(APP_DIR, 'public', 'index.html'));
 });
 
+app.get('/api/projects', async (request, response, next) => {
+    try {
+        response.json({ projects: await listProjects() });
+    } catch (error) {
+        next(error);
+    }
+});
+
+app.post('/api/projects', async (request, response, next) => {
+    try {
+        const projectName = stringOrNull(request.body?.project);
+        const organization = stringOrNull(request.body?.organization);
+        const sourceInput = stringOrNull(request.body?.source_location);
+
+        if (!projectName || projectName.length > 120) {
+            throw httpError('Projektname ist erforderlich und darf höchstens 120 Zeichen haben.');
+        }
+
+        if (/[\u0000-\u001f\u007f]/.test(projectName)) {
+            throw httpError('Projektname darf keine Steuerzeichen enthalten.');
+        }
+
+        if (organization && organization.length > 200) {
+            throw httpError('Organisation darf höchstens 200 Zeichen haben.');
+        }
+
+        let sourceLocation = null;
+        let sourceType = 'browser-upload';
+
+        if (sourceInput) {
+            if (!path.isAbsolute(sourceInput)) throw httpError('Bitte einen absoluten Pfad zum PDF-Ordner angeben.');
+            if (sourceInput.length > 4000) throw httpError('Der Pfad zum PDF-Ordner ist zu lang.');
+
+            sourceLocation = path.resolve(sourceInput);
+            const sourceStats = await fs.stat(sourceLocation).catch(error => {
+                if (error.code === 'ENOENT') throw httpError('Der angegebene PDF-Ordner existiert nicht.');
+                throw error;
+            });
+
+            if (!sourceStats.isDirectory()) throw httpError('Die PDF-Quelle muss ein Ordner sein.');
+            sourceType = 'local-directory';
+        }
+
+        let project;
+        try {
+            project = createProject(database, { project: projectName, organization, sourceLocation, sourceType });
+        } catch (error) {
+            if (String(error.code || '').startsWith('SQLITE_CONSTRAINT')) {
+                throw httpError('Ein Projekt mit diesem Namen existiert bereits.', 409);
+            }
+            throw error;
+        }
+
+        await fs.mkdir(projectPdfDirectory(project.id), { recursive: true });
+        response.status(201).json({ project: { ...project, pdf_count: 0 } });
+    } catch (error) {
+        next(error);
+    }
+});
+
+app.post('/api/projects/:projectId/uploads', async (request, response, next) => {
+    try {
+        const project = requireProject(request.params.projectId);
+        const totalCount = Number(request.body?.total_count);
+
+        if (!Number.isInteger(totalCount) || totalCount < 1 || totalCount > 100_000) {
+            throw httpError('total_count must be an integer between 1 and 100000');
+        }
+
+        const job = createProjectJob(database, project.id, 'import', 'Browser-Upload wird vorbereitet …');
+        response.status(201).json({
+            job: updateProjectJob(database, job.id, {
+                status: 'running',
+                total_count: totalCount,
+                message: `0 von ${totalCount} PDFs übertragen`,
+            }),
+        });
+    } catch (error) {
+        next(error);
+    }
+});
+
+app.post('/api/projects/:projectId/uploads/:jobId', async (request, response, next) => {
+    let project;
+    let job;
+
+    try {
+        project = requireProject(request.params.projectId);
+        job = requireUploadJob(project.id, request.params.jobId);
+        const filename = stringOrNull(request.query.filename);
+        const result = await receiveUploadedPdf(request, project.id, filename);
+        const current = requireUploadJob(project.id, job.id);
+        const processedCount = current.processed_count + 1;
+        const updatedJob = updateProjectJob(database, job.id, {
+            status: 'running',
+            processed_count: processedCount,
+            imported_count: current.imported_count + (result.imported ? 1 : 0),
+            skipped_count: current.skipped_count + (result.imported ? 0 : 1),
+            message: `${processedCount} von ${current.total_count} PDFs übertragen`,
+        });
+
+        response.status(result.imported ? 201 : 200).json({ file: result.file, imported: result.imported, job: updatedJob });
+    } catch (error) {
+        if (project && job) {
+            const current = getProjectJob(database, project.id, job.id);
+            if (current && ['queued', 'running'].includes(current.status)) {
+                updateProjectJob(database, job.id, {
+                    status: 'running',
+                    processed_count: current.processed_count + 1,
+                    error_count: current.error_count + 1,
+                    message: `${current.processed_count + 1} von ${current.total_count} PDFs übertragen`,
+                });
+            }
+        }
+        next(error);
+    }
+});
+
+app.post('/api/projects/:projectId/uploads/:jobId/complete', async (request, response, next) => {
+    try {
+        const project = requireProject(request.params.projectId);
+        const job = requireUploadJob(project.id, request.params.jobId);
+        const clientErrorCount = Math.max(0, Number(request.body?.error_count) || 0);
+        const errorCount = Math.max(job.error_count, clientErrorCount);
+        const processedCount = Math.min(job.total_count, job.imported_count + job.skipped_count + errorCount);
+        const message = `${job.imported_count} importiert, ${job.skipped_count} bereits vorhanden${errorCount ? `, ${errorCount} Fehler` : ''}`;
+        const completed = updateProjectJob(database, job.id, {
+            status: 'completed',
+            processed_count: processedCount,
+            error_count: errorCount,
+            message,
+        });
+
+        response.json({ job: completed });
+    } catch (error) {
+        next(error);
+    }
+});
+
+app.post('/api/projects/:projectId/import', async (request, response, next) => {
+    try {
+        const project = requireProject(request.params.projectId);
+
+        if (!project.source_location) throw httpError('Für dieses Projekt ist kein PDF-Ordner konfiguriert.');
+
+        const job = createProjectJob(database, project.id, 'import', 'Import wartet …');
+        void runImportJob(project, job.id);
+        response.status(202).json({ job });
+    } catch (error) {
+        next(error);
+    }
+});
+
+app.post('/api/projects/:projectId/scan', async (request, response, next) => {
+    try {
+        const project = requireProject(request.params.projectId);
+        const pdfCount = await countProjectPdfs(project.id);
+
+        if (pdfCount === 0) throw httpError('Für dieses Projekt wurden noch keine PDFs importiert.');
+
+        const job = createProjectJob(database, project.id, 'scan', 'Scan wartet …');
+        runScanJob(project, job.id);
+        response.status(202).json({ job });
+    } catch (error) {
+        next(error);
+    }
+});
+
 app.get('/api/problems', async (request, response, next) => {
     try {
-        const problems = await loadProblems();
+        const project = requireProject(request.query.project_id);
+        const problems = await loadProblems(project);
 
         response.json({
+            project,
             problems,
             total: problems.length,
         });
@@ -529,8 +1024,9 @@ app.get('/api/problems', async (request, response, next) => {
 
 app.get('/api/progress', async (request, response, next) => {
     try {
+        const project = requireProject(request.query.project_id);
         response.json({
-            reviewed: listReviewDecisions(database, PROJECT),
+            reviewed: listReviewDecisions(database, project.project),
         });
     } catch (error) {
         next(error);
@@ -539,6 +1035,7 @@ app.get('/api/progress', async (request, response, next) => {
 
 app.get('/api/recovered-text', async (request, response, next) => {
     try {
+        const project = requireProject(request.query.project_id);
         const problemId = stringOrNull(request.query.problem_id);
 
         if (!problemId) {
@@ -546,7 +1043,7 @@ app.get('/api/recovered-text', async (request, response, next) => {
             return;
         }
 
-        const databaseProblem = getDatabaseProblem(database, PROJECT, problemId);
+        const databaseProblem = getDatabaseProblem(database, project.project, problemId);
         const problem = databaseProblem
             ? { ...databaseProblem, evidence: sanitizeEvidence(databaseProblem.evidence) }
             : null;
@@ -559,7 +1056,7 @@ app.get('/api/recovered-text', async (request, response, next) => {
         response.set('Cache-Control', 'private, no-store');
         response.json({
             problem_id: problemId,
-            ...(await recoverTextForProblem(problem)),
+            ...(await recoverTextForProblem(project.id, problem)),
         });
     } catch (error) {
         next(error);
@@ -568,6 +1065,7 @@ app.get('/api/recovered-text', async (request, response, next) => {
 
 app.get('/api/pdf-metadata', async (request, response, next) => {
     try {
+        const project = requireProject(request.query.project_id);
         const problemId = stringOrNull(request.query.problem_id);
 
         if (!problemId) {
@@ -575,7 +1073,7 @@ app.get('/api/pdf-metadata', async (request, response, next) => {
             return;
         }
 
-        const problem = getDatabaseProblem(database, PROJECT, problemId);
+        const problem = getDatabaseProblem(database, project.project, problemId);
 
         if (!problem) {
             response.status(404).json({ error: 'Unknown problem_id' });
@@ -588,7 +1086,7 @@ app.get('/api/pdf-metadata', async (request, response, next) => {
         });
         response.json({
             problem_id: problemId,
-            ...(await readPdfMetadata(problem)),
+            ...(await readPdfMetadata(project.id, problem)),
         });
     } catch (error) {
         next(error);
@@ -611,7 +1109,8 @@ app.get('/api/pdf-page', async (request, response, next) => {
     }
 
     try {
-        const descriptor = await resolvePdfDescriptor(filename);
+        const project = requireProject(request.query.project_id);
+        const descriptor = await resolvePdfDescriptor(project.id, filename);
         const cacheKey = `page:${descriptor.version}:${pageNumber}:${requestedWidth}`;
         const cacheStatus = pdfArtifactCache.has(cacheKey) ? 'HIT' : 'MISS';
         const png = await getCachedPdfArtifact(cacheKey, async () => {
@@ -668,7 +1167,8 @@ app.get('/api/pdf-text-layer', async (request, response, next) => {
     }
 
     try {
-        const [{ Util }, descriptor] = await Promise.all([getPdfjs(), resolvePdfDescriptor(filename)]);
+        const project = requireProject(request.query.project_id);
+        const [{ Util }, descriptor] = await Promise.all([getPdfjs(), resolvePdfDescriptor(project.id, filename)]);
         const cacheKey = `text:${descriptor.version}:${pageNumber}:${requestedWidth}`;
         const cacheStatus = pdfArtifactCache.has(cacheKey) ? 'HIT' : 'MISS';
         const payload = await getCachedPdfArtifact(cacheKey, () =>
@@ -721,7 +1221,8 @@ app.post('/api/review', async (request, response, next) => {
     }
 
     try {
-        response.json(saveReview(database, PROJECT, problemId, decision));
+        const project = requireProject(request.body?.project_id);
+        response.json(saveReview(database, project.project, problemId, decision));
     } catch (error) {
         next(error);
     }
@@ -729,8 +1230,9 @@ app.post('/api/review', async (request, response, next) => {
 
 app.get('/pdf/:filename', async (request, response, next) => {
     try {
+        const project = requireProject(request.query.project_id);
         const filename = request.params.filename;
-        const pdfPath = await resolvePdfPath(filename);
+        const pdfPath = await resolvePdfPath(project.id, filename);
 
         response.set({
             'Cache-Control': PDF_BROWSER_CACHE,
@@ -776,9 +1278,7 @@ function startServer() {
 
         console.log(`Human review app: http://${HOST}:${PORT}`);
         console.log(`Database: ${DATABASE_FILE}`);
-        console.log(`Project:  ${PROJECT}`);
-        console.log(`Project ID: ${PROJECT_ID}`);
-        console.log(`PDFs:     ${PDF_DIR}`);
+        console.log(`PDF root: ${PDF_ROOT}`);
     });
 
     server.on('close', () => {

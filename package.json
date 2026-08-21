@@ -19,8 +19,9 @@
     "main": "discovery.js",
     "scripts": {
         "filter:open": "node scripts/filter-open-findings.mjs",
-        "migrate:forensic": "node migrate-forensic-to-sqlite.mjs",
-        "migrate:pdfs": "node migrate-pdfs-to-project-directory.mjs",
+        "scan": "node runs/fragdenstaat/forensic.mjs",
+        "migrate:forensic": "node lib/migrate-forensic-to-sqlite.mjs",
+        "migrate:pdfs": "node lib/migrate-pdfs-to-project-directory.mjs",
         "test": "node --test test/*.test.js human_in_the_loop/test/*.test.js"
     },
     "dependencies": {
