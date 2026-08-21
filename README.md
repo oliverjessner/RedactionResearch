@@ -1,39 +1,18 @@
-# RedactionResearch
+# RedactionResearch – lokale Web-App
 
-Benötigt Node.js 22.5 oder neuer, da Scanner und Review-App das integrierte SQLite-Modul von Node verwenden.
+![](/human_in_the_loop/public/assets/tagline.png)
 
-# Step 1 - Collect
+Die Web-App importiert lokale PDFs, untersucht sie auf möglicherweise fehlerhafte Schwärzungen und unterstützt
+anschließend die manuelle Prüfung der gefundenen Verdachtsfälle.
 
-start to collect ~3k redacted pdf links from fragDenStaat (14.08.2026)
+Alle PDFs, Analyseergebnisse und Review-Entscheidungen bleiben lokal auf dem Computer.
 
-```bash
-node runs/fragdenstaat/discovery.js
-```
+## Voraussetzungen
 
-Discovery-Ergebnisse und Kandidatenlisten werden unter `output/discovery/` gespeichert.
+- Node.js 22.5 oder neuer
+- Ein lokaler Ordner mit PDF-Dateien
 
-# Step 2 - download
-
-```bash
-node runs/fragdenstaat/download.js --project-id 1
-```
-
-Download-Ergebnisse und Download-Fortschritt werden als JSON unter `output/download/` gespeichert. Die PDF-Dateien
-liegen projektweise unter `output/download/pdfs/<project_id>/`, für `fragdenstaat.de` also unter
-`output/download/pdfs/1/`.
-
-# Step 3 - detect
-
-```bash
-npm run scan -- --project fragdenstaat.de
-```
-
-Forensische Ergebnisse, Scan-Fortschritt und Fehler werden relational in
-`output/forensic/forensic.sqlite` gespeichert. Neue Scans gehören standardmäßig zum Projekt
-`fragdenstaat.de`; mit `--project NAME` kann ein anderes Projekt gewählt werden. Der Scanner ermittelt die
-zugehörige Projekt-ID aus SQLite und liest die PDFs aus dem entsprechenden Projektordner.
-
-# Step 4 - double check with human
+## Installation und Start
 
 ```bash
 cd human_in_the_loop
@@ -41,71 +20,110 @@ npm install
 npm start
 ```
 
-Anschließend `http://localhost:3000` öffnen. Die App liest Findings direkt aus
-`output/forensic/forensic.sqlite` und schreibt Accept-/Skip-Entscheidungen transaktional in dieselbe Datenbank.
+Danach im Browser öffnen:
 
-Die App startet mit der Projektübersicht. Dort lassen sich Projekte mit Projektname und Organisation anlegen;
-der lokale PDF-Ordner wird über einen nativen Ordnerdialog ausgewählt. „PDFs hinzufügen“ importiert die
-ausgewählten PDFs nach `output/download/pdfs/<project_id>/`; „Forensic-Run“ scannt nur dieses Projekt im Hintergrund. Über
-„Review öffnen“ sind Investigate und Found anschließend auf das ausgewählte Projekt begrenzt. Import- und
-Scan-Status werden ebenfalls in SQLite gespeichert.
-
-Discovery und Download verwenden weiterhin ausschließlich ihre JSON-Dateien unter `output/discovery/` und
-`output/download/`.
-
-## Offene Funde nach rekonstruiertem Text filtern
-
-Das Batch-Skript verwendet dieselbe Regionsauswertung wie die Review-App. Es speichert oder protokolliert den
-rekonstruierten Text nicht. Zuerst einen Dry Run ausführen:
-
-```bash
-npm run filter:open
+```text
+http://127.0.0.1:3000/
 ```
 
-Nur Funde, deren nicht-leerer Text ausschließlich aus Unterstrichen und Leerraum besteht, werden mit `--apply`
-automatisch als `skipped` gespeichert. Treffer mit mindestens einem Buchstaben oder einer Zahl sowie leere,
-nicht auslesbare oder andere reine Symboltreffer bleiben offen:
+Nach Änderungen an der App muss der Server neu gestartet und die Seite neu geladen werden.
 
-```bash
-npm run filter:open -- --apply
+## Projekt anlegen
+
+Die App startet in der Ansicht **Projekte**.
+
+1. Einen eindeutigen Projektnamen eingeben.
+2. Optional die Organisation oder Quelle angeben.
+3. **Ordner auswählen** anklicken und den lokalen Ordner mit den PDFs auswählen.
+4. **Anlegen & importieren** anklicken.
+
+Die App berücksichtigt ausschließlich PDF-Dateien und importiert sie in einen eigenen Projektordner:
+
+```text
+output/download/pdfs/<project_id>/
 ```
 
-## Problems
+Gleichnamige, aber unterschiedliche PDFs werden nicht überschrieben. Bereits vorhandene identische Dateien
+werden übersprungen.
 
-- Schwarzer Balken über weiterhin vorhandenem Text
-- Schwarzes Bild über weiterhin vorhandenem Text
-- Weiße Fläche über weiterhin vorhandenem Text
-- Weißer Text auf weißem Hintergrund
-- Transparenter/unsichtbarer Text bleibt erhalten
-- PDF-Annotation statt echter Redaction
-- Redaction-Markierung vorhanden, aber nicht "applied"
-- Versteckte PDF-Layer enthalten Originaltext
-- Clip-Masken verstecken Text nur visuell
-- Text außerhalb des sichtbaren Seitenbereichs
-- Überlagerte Objekte lassen Originalinhalt bestehen
-- Formularfelder enthalten ungeschwärzte Werte
-- Kommentare/Notizen enthalten sensible Informationen
-- PDF-Metadaten enthalten sensible Informationen
-- Eingebettete Dateien enthalten Originaldaten
-- Anhänge im PDF enthalten ungeschwärzte Fassungen
-- Alte Revisionen/Versionen bleiben eingebettet
-- OCR-Text unter geschwärztem Scan bleibt erhalten
-- Text lässt sich trotz Schwärzung kopieren
-- Text lässt sich über Suche weiterhin finden
-- Links/URLs enthalten geschwärzte Informationen
-- Lesezeichen/Outline enthalten geschwärzte Informationen
-- Dateiname enthält sensible Informationen
-- Bildmetadaten enthalten sensible Informationen
-- Teilweise Schwärzung: einzelne Zeichen/Wörter bleiben sichtbar
-- Zu kurze Schwärzungsfläche
-- Verschobene Schwärzungsfläche
-- Schwärzung nur auf einer von mehreren identischen Stellen
-- Kopf-/Fußzeile bleibt ungeschwärzt
-- Wiederholung derselben Information an anderer Stelle
-- Tabellen-/Excel-Inhalte nur optisch ausgeblendet
-- Versteckte Tabellenzeilen/-spalten bleiben vorhanden
-- Änderungsverfolgung enthält ursprünglichen Inhalt
-- Dokumentkommentare enthalten ursprünglichen Inhalt
-- Text unter eingebetteten Screenshots/Bildern bleibt vorhanden
-- Vorschaubild/Thumbnail zeigt ungeschwärzte Version
-- Signaturdaten/Zertifikatsinformationen verraten geschwärzte Angaben
+Über **PDFs hinzufügen** können später weitere PDFs in ein bestehendes Projekt importiert werden.
+
+## Forensic-Run
+
+**Forensic-Run** startet die technische Untersuchung aller noch nicht erfolgreich gescannten PDFs des Projekts.
+
+Der Scanner sucht unter anderem nach:
+
+- sichtbaren Schwärzungsflächen, hinter denen Text erhalten geblieben ist;
+- unsichtbarem, weißem oder außerhalb der Seite positioniertem Text;
+- PDF-Redaction-Annotationen und verdächtigen Overlays;
+- sensiblen Informationen in PDF-Metadaten;
+- verdächtigen eingebetteten Dateien oder Anhängen;
+- weiteren strukturellen und visuellen Hinweisen auf unvollständige Schwärzungen.
+
+Der Fortschritt erscheint direkt auf der Projektkarte. Bereits erfolgreich gescannte PDFs werden
+übersprungen. Der Run bestätigt keine Funde automatisch.
+
+## Investigate
+
+Über **Review öffnen** gelangt man zu den offenen Verdachtsfällen des Projekts.
+
+Die Ansicht zeigt:
+
+- das PDF mit scrollbaren Seiten und auswählbarer Textschicht;
+- die betroffene Seite und erkannte Regionen;
+- den rekonstruierten Text hinter einer möglichen Schwärzung;
+- PDF-Metadaten mit hervorgehobenen E-Mail-Adressen;
+- Risk Score, Severity und technische Evidence;
+- alle weiteren Funde im aktuellen PDF.
+
+Entscheidungen:
+
+- **Accept** bestätigt einen tatsächlichen problematischen Fund.
+- **Skip** markiert den Fund als nicht relevant.
+
+Bereits entschiedene Funde erscheinen nach einem Neuladen nicht erneut unter Investigate. Die Anzeige
+**Noch offen** zeigt, wie viele Funde noch geprüft werden müssen.
+
+## Found
+
+Die Ansicht **Found** enthält ausschließlich bestätigte Funde. Zuerst wird eine Übersicht der betroffenen
+Dokumente angezeigt. Von dort kann jedes Dokument mit seinen bestätigten Fundstellen geöffnet werden.
+
+Das zugehörige Projekt wird bei jedem bestätigten Dokument angezeigt.
+
+## Lokale Datenspeicherung
+
+Die Web-App speichert ihre Daten an zwei Stellen:
+
+```text
+output/download/pdfs/<project_id>/
+output/forensic/forensic.sqlite
+```
+
+SQLite enthält unter anderem:
+
+- Projekte und Projektkonfigurationen;
+- gescannte Dokumente;
+- technische Findings und Scanfehler;
+- Import- und Scanfortschritt;
+- Accept- und Skip-Entscheidungen.
+
+Der rekonstruierte Text und ausgelesene PDF-Inhalte werden nur lokal angezeigt und nicht als Review-Text
+gespeichert.
+
+## Bedienung
+
+- Mit dem Mausrad kann durch das gesamte PDF gescrollt werden.
+- Text im PDF kann markiert und kopiert werden.
+- Ein Klick auf einen Fund springt zur betroffenen PDF-Seite.
+- Koordinaten wie `[51.02, 373.88, 140.66, 388.13]` können im Viewer als Box eingezeichnet werden.
+- In Investigate bestätigt die Taste `A` den aktuellen Fund und `S` überspringt ihn.
+
+## Tests
+
+Im Projektverzeichnis ausführen:
+
+```bash
+npm test
+```
