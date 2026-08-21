@@ -203,6 +203,33 @@ function openProjectUploadDialog(project) {
     elements['project-upload-input'].click();
 }
 
+async function removeProject(project) {
+    const confirmed = window.confirm(
+        `Projekt „${project.project}“ und alle zugehörigen Analyse- und Review-Daten aus SQLite löschen?\n\nDie PDF-Dateien bleiben erhalten.`,
+    );
+
+    if (!confirmed) return;
+
+    setProjectMessage(`Projekt ${project.project} wird gelöscht …`);
+
+    try {
+        await fetchJson(`/api/projects/${project.id}`, { method: 'DELETE' });
+
+        if (state.activeProject?.id === project.id) {
+            state.activeProject = null;
+            state.problems = [];
+            state.reviewed = {};
+            state.filtered = [];
+            state.currentIndex = -1;
+        }
+
+        await refreshProjects();
+        setProjectMessage(`Projekt ${project.project} wurde aus SQLite gelöscht.`, 'success');
+    } catch (error) {
+        setProjectMessage(error.message, 'error');
+    }
+}
+
 async function uploadFilesToProject(project, files) {
     const pdfFiles = selectedPdfFiles(files);
 
@@ -319,6 +346,7 @@ function renderProjects() {
             projectAction('Forensic-Run', 'button-accept', activeJob || project.pdf_count === 0, () =>
                 startProjectJob(project, 'scan'),
             ),
+            projectAction('Projekt löschen', 'button-danger', activeJob, () => removeProject(project)),
         );
         card.append(heading, source, stats, job, actions);
         elements['project-list'].append(card);

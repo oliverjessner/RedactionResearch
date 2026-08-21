@@ -5,12 +5,17 @@ const test = require('node:test');
 
 const {
     countProblemDocuments,
+    createProject,
+    createProjectJob,
+    deleteProject,
     isDocumentScanCompleted,
     listProblems,
     listReviewDecisions,
     openForensicDatabase,
     saveDocumentScanResult,
     saveReview,
+    startScanRun,
+    updateProjectJob,
 } = require('../lib/forensic-db.js');
 
 test('forensic data persists in relational SQLite state', async () => {
@@ -70,6 +75,55 @@ test('forensic data persists in relational SQLite state', async () => {
         saveReview(database, 'fragdenstaat.de', problemId, 'skipped');
         assert.equal(listReviewDecisions(database, 'fragdenstaat.de')[problemId], 'skipped');
         assert.equal(database.prepare('PRAGMA integrity_check').get().integrity_check, 'ok');
+        assert.deepEqual(database.prepare('PRAGMA foreign_key_check').all(), []);
+    } finally {
+        database.close();
+        await fs.rm(temporaryDirectory, { recursive: true, force: true });
+    }
+});
+
+test('deleting a project cascades through every project-owned SQLite table', async () => {
+    const temporaryDirectory = await fs.mkdtemp('/tmp/redaction-project-delete-test-');
+    const databaseFile = path.join(temporaryDirectory, 'forensic.sqlite');
+    const database = openForensicDatabase(databaseFile);
+    const project = createProject(database, { project: 'delete.example' });
+    const problemId = 'delete:1:TEST_FINDING:0';
+
+    try {
+        saveDocumentScanResult(database, project.project, {
+            file: 'delete.pdf',
+            document_id: 'delete',
+            problems: [
+                {
+                    problem_id: problemId,
+                    type: 'TEST_FINDING',
+                    risk_score: 91,
+                    page: 1,
+                    severity: 'critical',
+                    evidence: {},
+                },
+            ],
+        });
+        saveReview(database, project.project, problemId, 'accepted');
+        startScanRun(database, project.project, {
+            selectedCount: 1,
+            minScore: 60,
+            renderScale: 1.5,
+            renderChecks: true,
+        });
+
+        const activeJob = createProjectJob(database, project.id, 'scan');
+        assert.throws(
+            () => deleteProject(database, project.id),
+            error => error.status === 409 && /laufendes Projekt/.test(error.message),
+        );
+        updateProjectJob(database, activeJob.id, { status: 'completed' });
+
+        assert.equal(deleteProject(database, project.id).project, project.project);
+
+        for (const table of ['projects', 'documents', 'findings', 'reviews', 'scan_status', 'scan_runs', 'project_jobs']) {
+            assert.equal(database.prepare(`SELECT COUNT(*) AS count FROM ${table}`).get().count, 0, table);
+        }
         assert.deepEqual(database.prepare('PRAGMA foreign_key_check').all(), []);
     } finally {
         database.close();

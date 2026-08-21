@@ -158,6 +158,8 @@ test('API safely serves, reviews, and persists SQLite findings', async () => {
         assert.match(appScript, /function renderProjects\(\)/);
         assert.match(appScript, /function loadProjectReview\(project/);
         assert.match(appScript, /async function uploadFilesToProject\(project, files\)/);
+        assert.match(appScript, /async function removeProject\(project\)/);
+        assert.match(appScript, /Projekt löschen/);
 
         const initialProjectsPayload = await (await fetch(`${baseUrl}/api/projects`)).json();
         assert.equal(initialProjectsPayload.projects.length, 1);
@@ -226,6 +228,20 @@ test('API safely serves, reviews, and persists SQLite findings', async () => {
         assert.equal(scanResponse.status, 202);
         const scannedProject = await waitForJob(secondProjectId, 'completed');
         assert.equal(scannedProject.latest_job.kind, 'scan');
+
+        const deleteProjectResponse = await fetch(`${baseUrl}/api/projects/${secondProjectId}`, {
+            method: 'DELETE',
+        });
+        const deleteProjectPayload = await deleteProjectResponse.json();
+        assert.equal(deleteProjectResponse.status, 200);
+        assert.equal(deleteProjectPayload.deleted.id, secondProjectId);
+        assert.equal(deleteProjectPayload.deleted.project, 'example.test');
+        assert.equal(
+            (await (await fetch(`${baseUrl}/api/projects`)).json()).projects.some(project => project.id === secondProjectId),
+            false,
+        );
+        assert.equal(await fs.readFile(path.join(pdfRoot, '2', '456.pdf'), 'utf8'), createFixturePdf());
+        assert.equal((await fetch(`${baseUrl}/api/projects/${secondProjectId}`, { method: 'DELETE' })).status, 404);
 
         const problemsResponse = await fetch(`${baseUrl}/api/problems?project_id=1`);
         const problemsPayload = await problemsResponse.json();

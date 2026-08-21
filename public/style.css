@@ -1195,6 +1195,17 @@ dd {
     background: var(--accept-hover);
 }
 
+.button-danger {
+    border: 1px solid #c99a9f;
+    color: var(--critical);
+    background: #fff0ee;
+}
+
+.button-danger:hover:not(:disabled) {
+    color: #fff;
+    background: var(--critical);
+}
+
 kbd {
     margin-left: 5px;
     padding: 1px 5px;

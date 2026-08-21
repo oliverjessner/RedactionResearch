@@ -9,6 +9,7 @@ const express = require('express');
 const {
     createProject,
     createProjectJob,
+    deleteProject,
     failStaleProjectJobs,
     getProblem: getDatabaseProblem,
     getProject,
@@ -894,6 +895,17 @@ app.post('/api/projects', async (request, response, next) => {
 
         await fs.mkdir(projectPdfDirectory(project.id), { recursive: true });
         response.status(201).json({ project: { ...project, pdf_count: 0 } });
+    } catch (error) {
+        next(error);
+    }
+});
+
+app.delete('/api/projects/:projectId', (request, response, next) => {
+    try {
+        const project = requireProject(request.params.projectId);
+        const deleted = deleteProject(database, project.id);
+
+        response.json({ deleted: { id: deleted.id, project: deleted.project } });
     } catch (error) {
         next(error);
     }

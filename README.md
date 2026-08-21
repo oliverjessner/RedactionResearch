@@ -59,6 +59,11 @@ werden übersprungen.
 
 Über **PDFs hinzufügen** können später weitere PDFs in ein bestehendes Projekt importiert werden.
 
+Über **Projekt löschen** wird das Projekt nach einer Bestätigung aus SQLite entfernt. Dabei werden auch alle
+zugehörigen Dokumenteinträge, Findings, Review-Entscheidungen, Scan-Zustände und Job-Verläufe gelöscht. Die
+PDF-Dateien auf der Festplatte bleiben erhalten. Projekte mit einem laufenden Import oder Scan können nicht
+gelöscht werden.
+
 ## Forensic-Run
 
 **Forensic-Run** startet die technische Untersuchung aller noch nicht erfolgreich gescannten PDFs des Projekts.
