@@ -1,6 +1,6 @@
 {
     "name": "redaction-research",
-    "version": "1.0.0",
+    "version": "0.1.0",
     "private": true,
     "description": "Local web app for detecting and reviewing potentially incomplete PDF redactions",
     "homepage": "https://github.com/oliverjessner/RedactionResearch#readme",

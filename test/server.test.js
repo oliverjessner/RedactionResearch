@@ -124,6 +124,7 @@ test('API safely serves, reviews, and persists SQLite findings', async () => {
         assert.match(appScript, /renderProblem\(\{ preservePdf:/);
         assert.match(appMarkup, /id="view-investigate"/);
         assert.match(appMarkup, /id="view-found"/);
+        assert.match(appMarkup, /id="view-skipped"/);
         assert.match(appMarkup, /id="view-projects"/);
         assert.match(appMarkup, /id="projects-overview"/);
         assert.match(appMarkup, /id="project-form"/);
@@ -142,7 +143,9 @@ test('API safely serves, reviews, and persists SQLite findings', async () => {
         assert.doesNotMatch(appMarkup, /id="problem-type"/);
         assert.doesNotMatch(appMarkup, /privacy-note/);
         assert.match(appScript, /decision === 'accepted'/);
-        assert.match(appScript, /function foundDocumentGroups\(\)/);
+        assert.match(appScript, /decision === 'skipped'/);
+        assert.match(appScript, /function decisionDocumentGroups\(\)/);
+        assert.match(appScript, /function renderDecisionOverview\(\)/);
         assert.match(appScript, /project: problem\.project \|\| 'Ohne Projekt'/);
         assert.equal(appScript.includes("addEventListener('wheel'"), false);
         assert.equal(appScript.includes('&request='), false);
@@ -228,6 +231,7 @@ test('API safely serves, reviews, and persists SQLite findings', async () => {
         assert.equal(scanResponse.status, 202);
         const scannedProject = await waitForJob(secondProjectId, 'completed');
         assert.equal(scannedProject.latest_job.kind, 'scan');
+        assert.match(scannedProject.latest_job.message, /Unterstrich-Funde automatisch übersprungen/);
 
         const deleteProjectResponse = await fetch(`${baseUrl}/api/projects/${secondProjectId}`, {
             method: 'DELETE',

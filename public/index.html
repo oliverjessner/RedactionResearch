@@ -22,6 +22,7 @@
                         Investigate
                     </button>
                     <button id="view-found" class="view-tab" type="button" aria-selected="false">Found</button>
+                    <button id="view-skipped" class="view-tab" type="button" aria-selected="false">Skipped</button>
                 </nav>
             </div>
 
@@ -118,15 +119,15 @@
             <section id="found-overview" class="found-overview" aria-labelledby="found-overview-title" hidden>
                 <header class="found-overview-header">
                     <div>
-                        <p class="eyebrow">Found</p>
+                        <p id="decision-overview-eyebrow" class="eyebrow">Found</p>
                         <h2 id="found-overview-title">Bestätigte Dokumente</h2>
                     </div>
                     <p id="found-overview-summary"></p>
                 </header>
                 <div id="found-documents" class="found-documents"></div>
                 <div id="found-empty" class="found-empty" hidden>
-                    <strong>Noch keine bestätigten Dokumente</strong>
-                    <p>Mit Accept bestätigte Funde erscheinen automatisch hier.</p>
+                    <strong id="found-empty-title">Noch keine bestätigten Dokumente</strong>
+                    <p id="found-empty-text">Mit Accept bestätigte Funde erscheinen automatisch hier.</p>
                 </div>
             </section>
 

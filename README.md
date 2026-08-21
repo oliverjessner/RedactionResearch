@@ -106,7 +106,10 @@ Bei E-Mail-Adressen, IBANs und Telefonnummern speichert der Scanner nur die erka
 gefundenen Inhalt.
 
 Der Fortschritt erscheint direkt auf der Projektkarte. Bereits erfolgreich gescannte PDFs werden
-übersprungen. Der Run bestätigt keine Funde automatisch.
+übersprungen. Nach dem Scan rekonstruiert die App den Text in allen offenen Fundregionen. Findings, deren
+Regionen ausschließlich Unterstriche und Leerraum enthalten, werden automatisch als **Skip** markiert. Leere
+Regionen, andere Symbole sowie Inhalte mit mindestens einem Buchstaben oder einer Zahl bleiben zur manuellen
+Prüfung offen. Der Run bestätigt keine Funde automatisch.
 
 ## Investigate
 
@@ -135,6 +138,12 @@ Die Ansicht **Found** enthält ausschließlich bestätigte Funde. Zuerst wird ei
 Dokumente angezeigt. Von dort kann jedes Dokument mit seinen bestätigten Fundstellen geöffnet werden.
 
 Das zugehörige Projekt wird bei jedem bestätigten Dokument angezeigt.
+
+## Skipped
+
+Die Ansicht **Skipped** enthält alle manuell oder automatisch übersprungenen Funde. Wie bei Found erscheint
+zuerst eine Übersicht der betroffenen Dokumente. Von dort lassen sich die übersprungenen Fundstellen erneut im
+PDF-Viewer öffnen und vollständig untersuchen. Das bloße Ansehen verändert die gespeicherte Entscheidung nicht.
 
 ## Lokale Datenspeicherung
 

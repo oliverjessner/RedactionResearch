@@ -5,7 +5,7 @@ const state = {
     projectPollTimer: null,
     newProjectFiles: [],
     uploadTargetProject: null,
-    foundDetail: false,
+    archiveDetail: false,
     problems: [],
     filtered: [],
     reviewed: {},
@@ -37,6 +37,7 @@ const elements = Object.fromEntries(
         'coordinate-form',
         'coordinate-input',
         'decision-badge',
+        'decision-overview-eyebrow',
         'document-id',
         'document-findings',
         'document-title',
@@ -46,7 +47,10 @@ const elements = Object.fromEntries(
         'found-back',
         'found-documents',
         'found-empty',
+        'found-empty-text',
+        'found-empty-title',
         'found-overview',
+        'found-overview-title',
         'found-overview-summary',
         'message',
         'metadata-content',
@@ -101,6 +105,7 @@ const elements = Object.fromEntries(
         'view-found',
         'view-investigate',
         'view-projects',
+        'view-skipped',
         'viewer-panel',
         'workspace',
     ].map(id => [id, document.getElementById(id)]),
@@ -113,7 +118,13 @@ function currentProblem() {
 function problemMatchesView(problem) {
     const decision = state.reviewed[problem.problem_id];
 
-    return state.view === 'found' ? decision === 'accepted' : !decision;
+    if (state.view === 'found') return decision === 'accepted';
+    if (state.view === 'skipped') return decision === 'skipped';
+    return !decision;
+}
+
+function isDecisionArchiveView() {
+    return state.view === 'found' || state.view === 'skipped';
 }
 
 function reviewCounts() {
@@ -410,7 +421,7 @@ async function loadProjectReview(project, view = 'investigate') {
         state.recoveredText.clear();
         state.metadataCache.clear();
         state.view = view;
-        state.foundDetail = false;
+        state.archiveDetail = false;
         elements['severity-filter'].value = 'all';
         elements['type-filter'].value = 'all';
         populateTypeFilter();
@@ -425,7 +436,9 @@ async function loadProjectReview(project, view = 'investigate') {
 function renderViewControls() {
     const projectsView = state.view === 'projects';
     const foundView = state.view === 'found';
-    const foundOverview = foundView && !state.foundDetail;
+    const skippedView = state.view === 'skipped';
+    const archiveView = foundView || skippedView;
+    const archiveOverview = archiveView && !state.archiveDetail;
 
     elements['view-projects'].classList.toggle('active', projectsView);
     elements['view-projects'].setAttribute('aria-selected', String(projectsView));
@@ -433,20 +446,22 @@ function renderViewControls() {
     elements['view-investigate'].setAttribute('aria-selected', String(state.view === 'investigate'));
     elements['view-found'].classList.toggle('active', foundView);
     elements['view-found'].setAttribute('aria-selected', String(foundView));
+    elements['view-skipped'].classList.toggle('active', skippedView);
+    elements['view-skipped'].setAttribute('aria-selected', String(skippedView));
     elements['projects-overview'].hidden = !projectsView;
     elements['progress-block'].hidden = projectsView;
     elements.filters.hidden = projectsView;
-    elements.accept.hidden = foundView || projectsView;
-    elements.skip.hidden = foundView || projectsView;
-    elements['found-back'].hidden = !foundView || foundOverview;
-    elements['found-overview'].hidden = !foundOverview;
-    elements['viewer-panel'].hidden = projectsView || foundOverview;
-    elements['review-panel'].hidden = projectsView || foundOverview;
-    elements['project-detail'].hidden = !foundView;
-    elements['review-actions'].classList.toggle('found-view', foundView);
+    elements.accept.hidden = archiveView || projectsView;
+    elements.skip.hidden = archiveView || projectsView;
+    elements['found-back'].hidden = !archiveView || archiveOverview;
+    elements['found-overview'].hidden = !archiveOverview;
+    elements['viewer-panel'].hidden = projectsView || archiveOverview;
+    elements['review-panel'].hidden = projectsView || archiveOverview;
+    elements['project-detail'].hidden = !archiveView;
+    elements['review-actions'].classList.toggle('found-view', archiveView);
 }
 
-function foundDocumentGroups() {
+function decisionDocumentGroups() {
     const groups = new Map();
 
     for (const problem of state.filtered) {
@@ -477,16 +492,26 @@ function foundDocumentGroups() {
     );
 }
 
-function renderFoundOverview() {
-    const groups = foundDocumentGroups();
+function renderDecisionOverview() {
+    const groups = decisionDocumentGroups();
+    const skippedView = state.view === 'skipped';
+    const adjective = skippedView ? 'übersprungene' : 'bestätigte';
 
     renderViewControls();
     renderProgress();
+    elements['decision-overview-eyebrow'].textContent = skippedView ? 'Skipped' : 'Found';
+    elements['found-overview-title'].textContent = skippedView ? 'Übersprungene Dokumente' : 'Bestätigte Dokumente';
     elements['found-documents'].replaceChildren();
     elements['found-overview-summary'].textContent =
         `${groups.length} Dokument${groups.length === 1 ? '' : 'e'} · ` +
-        `${state.filtered.length} bestätigte${state.filtered.length === 1 ? 'r Fund' : ' Funde'}`;
+        `${state.filtered.length} ${adjective}${state.filtered.length === 1 ? 'r Fund' : ' Funde'}`;
     elements['found-empty'].hidden = groups.length > 0;
+    elements['found-empty-title'].textContent = skippedView
+        ? 'Noch keine übersprungenen Dokumente'
+        : 'Noch keine bestätigten Dokumente';
+    elements['found-empty-text'].textContent = skippedView
+        ? 'Mit Skip übersprungene Funde erscheinen automatisch hier.'
+        : 'Mit Accept bestätigte Funde erscheinen automatisch hier.';
 
     for (const group of groups) {
         const card = document.createElement('button');
@@ -513,7 +538,7 @@ function renderFoundOverview() {
         filename.textContent = group.file;
         metadata.className = 'found-document-metadata';
         metadata.textContent =
-            `${group.problems.length} bestätigte${group.problems.length === 1 ? 'r Fund' : ' Funde'} · ${pageLabel}`;
+            `${group.problems.length} ${adjective}${group.problems.length === 1 ? 'r Fund' : ' Funde'} · ${pageLabel}`;
         score.className = `found-document-score score-${group.severity}`;
         score.textContent = `Score ${group.maxScore}`;
         heading.append(project, title, filename);
@@ -526,20 +551,20 @@ function renderFoundOverview() {
             if (targetIndex < 0) return;
 
             state.currentIndex = targetIndex;
-            state.foundDetail = true;
+            state.archiveDetail = true;
             renderProblem({ preservePdf: state.pdfFile === group.file });
         });
         elements['found-documents'].append(card);
     }
 }
 
-function showFoundOverview() {
-    if (state.view !== 'found') return;
+function showDecisionOverview() {
+    if (!isDecisionArchiveView()) return;
 
-    state.foundDetail = false;
+    state.archiveDetail = false;
     state.currentIndex = -1;
     setMessage('');
-    renderFoundOverview();
+    renderDecisionOverview();
 }
 
 function pdfUrl(problem) {
@@ -1199,8 +1224,8 @@ async function renderPdfMetadata(problem) {
 function renderProblem({ preservePdf = false } = {}) {
     const problem = currentProblem();
 
-    if (state.view === 'found' && !state.foundDetail) {
-        renderFoundOverview();
+    if (isDecisionArchiveView() && !state.archiveDetail) {
+        renderDecisionOverview();
         return;
     }
 
@@ -1215,6 +1240,8 @@ function renderProblem({ preservePdf = false } = {}) {
         elements['review-empty'].innerHTML =
             state.view === 'found'
                 ? '<strong>Noch keine bestätigten Funde</strong><p>Bestätigte Funde erscheinen automatisch in dieser Ansicht.</p>'
+                : state.view === 'skipped'
+                  ? '<strong>Noch keine übersprungenen Funde</strong><p>Übersprungene Funde erscheinen automatisch in dieser Ansicht.</p>'
                 : allReviewed
                   ? '<strong>Alle Verdachtsfälle geprüft</strong><p>Es sind keine offenen Funde mehr vorhanden.</p>'
                   : '<strong>Keine offenen Fälle in diesem Filter</strong><p>Wähle einen anderen Filter oder prüfe den Datenbestand.</p>';
@@ -1291,9 +1318,9 @@ function applyFilters({ preserveProblemId = null } = {}) {
         ? state.filtered.findIndex(problem => problem.problem_id === preserveProblemId)
         : -1;
 
-    if (state.view === 'found' && !state.foundDetail) {
+    if (isDecisionArchiveView() && !state.archiveDetail) {
         state.currentIndex = -1;
-        renderFoundOverview();
+        renderDecisionOverview();
     } else {
         state.currentIndex = nextIndex >= 0 ? nextIndex : state.filtered.length ? 0 : -1;
         renderProblem({ preservePdf: currentProblem()?.file === previousPdfFile });
@@ -1301,11 +1328,11 @@ function applyFilters({ preserveProblemId = null } = {}) {
 }
 
 function switchView(view) {
-    if (!['projects', 'investigate', 'found'].includes(view) || state.view === view) return;
+    if (!['projects', 'investigate', 'found', 'skipped'].includes(view) || state.view === view) return;
 
     if (view === 'projects') {
         state.view = view;
-        state.foundDetail = false;
+        state.archiveDetail = false;
         setMessage('');
         renderViewControls();
         renderProjects();
@@ -1319,7 +1346,7 @@ function switchView(view) {
     }
 
     state.view = view;
-    state.foundDetail = false;
+    state.archiveDetail = false;
     setMessage('');
     applyFilters();
 }
@@ -1410,7 +1437,8 @@ elements.next.addEventListener('click', () => move(1));
 elements['view-projects'].addEventListener('click', () => switchView('projects'));
 elements['view-investigate'].addEventListener('click', () => switchView('investigate'));
 elements['view-found'].addEventListener('click', () => switchView('found'));
-elements['found-back'].addEventListener('click', showFoundOverview);
+elements['view-skipped'].addEventListener('click', () => switchView('skipped'));
+elements['found-back'].addEventListener('click', showDecisionOverview);
 elements.skip.addEventListener('click', () => saveDecision('skip'));
 elements.accept.addEventListener('click', () => saveDecision('accept'));
 elements['pdf-page-previous'].addEventListener('click', () => changePdfPage(state.pdfPage - 1));
@@ -1497,7 +1525,7 @@ window.addEventListener('resize', () => {
 
 for (const filter of [elements['severity-filter'], elements['type-filter']]) {
     filter.addEventListener('change', () => {
-        if (state.view === 'found') state.foundDetail = false;
+        if (isDecisionArchiveView()) state.archiveDetail = false;
         applyFilters();
     });
 }
@@ -1513,10 +1541,10 @@ document.addEventListener('keydown', event => {
     } else if (state.view === 'investigate' && event.key.toLowerCase() === 's') {
         event.preventDefault();
         saveDecision('skip');
-    } else if (event.key === 'ArrowLeft' && (state.view !== 'found' || state.foundDetail)) {
+    } else if (event.key === 'ArrowLeft' && (!isDecisionArchiveView() || state.archiveDetail)) {
         event.preventDefault();
         move(-1);
-    } else if (event.key === 'ArrowRight' && (state.view !== 'found' || state.foundDetail)) {
+    } else if (event.key === 'ArrowRight' && (!isDecisionArchiveView() || state.archiveDetail)) {
         event.preventDefault();
         move(1);
     }

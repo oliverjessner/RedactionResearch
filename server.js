@@ -39,6 +39,9 @@ const DATABASE_FILE = path.resolve(process.env.HITL_DATABASE_FILE || path.join(F
 const SCANNER_FILE = path.resolve(
     process.env.HITL_SCANNER_FILE || path.join(PROJECT_DIR, 'forensic.mjs'),
 );
+const OPEN_FINDINGS_FILTER_FILE = path.resolve(
+    process.env.HITL_OPEN_FINDINGS_FILTER_FILE || path.join(PROJECT_DIR, 'scripts', 'filter-open-findings.mjs'),
+);
 const PDFJS_ROOT = path.dirname(require.resolve('pdfjs-dist/package.json'));
 const PDFJS_CMAP_URL = `${path.join(PDFJS_ROOT, 'cmaps')}${path.sep}`;
 const PDFJS_STANDARD_FONT_URL = `${path.join(PDFJS_ROOT, 'standard_fonts')}${path.sep}`;
@@ -822,10 +825,75 @@ function runScanJob(project, jobId) {
     child.on('close', code => {
         if (settled) return;
         settled = true;
+
+        if (code !== 0) {
+            updateProjectJob(database, jobId, {
+                status: 'failed',
+                message: 'Forensic-Scan fehlgeschlagen',
+                error_message: `${lastMessage} (Exit ${code})`.slice(0, 1000),
+            });
+            return;
+        }
+
+        updateProjectJob(database, jobId, {
+            status: 'running',
+            message: 'Reine Unterstrich-Funde werden automatisch gefiltert …',
+        });
+
+        runOpenFindingsFilter(project, jobId);
+    });
+}
+
+function runOpenFindingsFilter(project, jobId) {
+    const child = spawn(
+        process.execPath,
+        [
+            OPEN_FINDINGS_FILTER_FILE,
+            '--apply',
+            '--project',
+            project.project,
+            '--database',
+            DATABASE_FILE,
+            '--pdf-root',
+            PDF_ROOT,
+        ],
+        {
+            cwd: PROJECT_DIR,
+            env: process.env,
+            shell: false,
+            stdio: ['ignore', 'pipe', 'pipe'],
+        },
+    );
+    let settled = false;
+    let output = '';
+
+    const consumeOutput = chunk => {
+        output = `${output}${chunk}`.slice(-12_000);
+    };
+
+    child.stdout.on('data', consumeOutput);
+    child.stderr.on('data', consumeOutput);
+    child.on('error', error => {
+        if (settled) return;
+        settled = true;
+        updateProjectJob(database, jobId, {
+            status: 'failed',
+            message: 'Scan abgeschlossen, Unterstrich-Filter konnte nicht gestartet werden',
+            error_message: String(error?.message || error).slice(0, 1000),
+        });
+    });
+    child.on('close', code => {
+        if (settled) return;
+        settled = true;
+        const skipped = Number(output.match(/Written as skipped:\s+(\d+)/)?.[1] || 0);
+
         updateProjectJob(database, jobId, {
             status: code === 0 ? 'completed' : 'failed',
-            message: code === 0 ? 'Forensic-Scan abgeschlossen' : 'Forensic-Scan fehlgeschlagen',
-            error_message: code === 0 ? null : `${lastMessage} (Exit ${code})`.slice(0, 1000),
+            message:
+                code === 0
+                    ? `Forensic-Scan abgeschlossen · ${skipped} Unterstrich-Funde automatisch übersprungen`
+                    : 'Scan abgeschlossen, Unterstrich-Filter fehlgeschlagen',
+            error_message: code === 0 ? null : output.trim().slice(-1000) || `Filter Exit ${code}`,
         });
     });
 }
