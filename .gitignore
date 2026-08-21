@@ -1,5 +1,5 @@
-scripts/muckrack.py
 node_modules/
+__pycache__/
 temp/
 dist/
 build/
@@ -14,6 +14,7 @@ src-tauri/gen/
 !.env.example
 client_secret.json
 output/download/pdfs/
+output/pdfs/
 *.db
 *.sqlite
 !output/forensic/forensic.sqlite

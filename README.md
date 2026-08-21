@@ -63,14 +63,42 @@ werden übersprungen.
 
 **Forensic-Run** startet die technische Untersuchung aller noch nicht erfolgreich gescannten PDFs des Projekts.
 
-Der Scanner sucht unter anderem nach:
+### Erkannte mögliche Schwachstellen
 
-- sichtbaren Schwärzungsflächen, hinter denen Text erhalten geblieben ist;
-- unsichtbarem, weißem oder außerhalb der Seite positioniertem Text;
-- PDF-Redaction-Annotationen und verdächtigen Overlays;
-- sensiblen Informationen in PDF-Metadaten;
-- verdächtigen eingebetteten Dateien oder Anhängen;
-- weiteren strukturellen und visuellen Hinweisen auf unvollständige Schwärzungen.
+- `REDACTION_ANNOTATION_WITH_LIVE_TEXT`: Eine echte PDF-Redaction-Annotation liegt über weiterhin
+  maschinenlesbarem Text.
+- `DARK_ANNOTATION_OVER_LIVE_TEXT`: Eine dunkle Square-, Stamp-, FreeText- oder Ink-Annotation überdeckt
+  weiterhin vorhandenen Text.
+- `ANNOTATION_OVERLAY_HIDES_LIVE_TEXT`: Ein Annotation-Overlay verdeckt Text; beim Rendern ohne Annotationen
+  verschwindet die dunkle Fläche.
+- `DARK_PAGE_CONTENT_HIDES_LIVE_TEXT`: Ein schwarzes Seitenobjekt, Rechteck oder Bild liegt über
+  weiterhin vorhandenem Text.
+- `LIVE_TEXT_NOT_VISIBLE_ON_WHITE_REGION`: Text ist technisch vorhanden, wird aber auf einer nahezu weißen
+  Fläche nicht sichtbar dargestellt.
+- `FORM_FIELD_VALUES_REMAIN_MACHINE_READABLE`: Ausgefüllte Formularfelder enthalten weiterhin auslesbare
+  Werte.
+- `SENSITIVE_PATTERN_IN_PDF_METADATA`: PDF- oder XMP-Metadaten enthalten ein erkanntes Muster für eine
+  E-Mail-Adresse, IBAN oder österreichische beziehungsweise deutsche Telefonnummer.
+- `SENSITIVE_PATTERN_IN_BOOKMARK_OUTLINE`: Titel in der Lesezeichenstruktur enthalten eines dieser sensiblen
+  Muster.
+- `SUSPICIOUS_EMBEDDED_ATTACHMENT`: Ein eingebetteter Anhang besitzt einen verdächtigen Namen wie
+  „ungeschwärzt“, „unredacted“, „original“, „raw“, „source“ oder „backup“.
+- `INCREMENTAL_PDF_REVISIONS_PRESENT`: Das PDF enthält frühere inkrementelle Revisionen, in denen alte Inhalte
+  fortbestehen könnten. Revisionen allein sind noch kein Beweis für ein Datenleck.
+
+### Zusätzliche Warnsignale
+
+Diese Merkmale werden als Kontext gespeichert und erhöhen nicht automatisch den Status zu einem tatsächlichen
+Problem:
+
+- `OPTIONAL_CONTENT_LAYERS_PRESENT`: Das PDF enthält optionale oder ausblendbare Ebenen.
+- `EMBEDDED_ATTACHMENTS_PRESENT`: Das PDF enthält eingebettete Dateien oder Anhänge.
+- `FORM_FIELDS_WITH_VALUES_PRESENT`: Das PDF enthält ausgefüllte Formularfelder.
+- `INCREMENTAL_PDF_REVISIONS_PRESENT`: Das PDF enthält mehrere Revisionen oder Verweise auf frühere
+  Dokumentstände. Digitale Signaturen werden dabei als möglicher legitimer Grund berücksichtigt.
+
+Bei E-Mail-Adressen, IBANs und Telefonnummern speichert der Scanner nur die erkannte Datenkategorie, nicht den
+gefundenen Inhalt.
 
 Der Fortschritt erscheint direkt auf der Projektkarte. Bereits erfolgreich gescannte PDFs werden
 übersprungen. Der Run bestätigt keine Funde automatisch.

@@ -21,12 +21,13 @@
     "scripts": {
         "start": "node server.js",
         "download:found": "node scripts/download-found.mjs",
+        "download:muckrock": "uv run --python 3.12 scripts/muckrock_download.py",
         "filter:open": "node scripts/filter-open-findings.mjs",
         "scan": "node forensic.mjs",
         "test": "node --test test/*.test.js"
     },
     "dependencies": {
-        "@napi-rs/canvas": "^1.0.6",
+        "@napi-rs/canvas": "^1.0.7",
         "express": "^5.1.0",
         "pdfjs-dist": "^6.2.108"
     }
