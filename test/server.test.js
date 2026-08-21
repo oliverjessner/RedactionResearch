@@ -182,6 +182,7 @@ test('API safely serves, reviews, and persists SQLite findings', async () => {
         assert.equal(createProjectResponse.status, 201);
         assert.equal(secondProjectId, 2);
         assert.equal(createProjectPayload.project.source_type, 'browser-upload');
+        assert.equal('source_location' in createProjectPayload.project, false);
 
         const waitForJob = async (projectId, expectedStatus) => {
             for (let attempt = 0; attempt < 100; attempt++) {

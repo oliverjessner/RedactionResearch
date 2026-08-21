@@ -567,23 +567,6 @@ async function listProjects() {
     );
 }
 
-async function collectPdfFiles(directory) {
-    const files = [];
-    const entries = await fs.readdir(directory, { withFileTypes: true });
-
-    for (const entry of entries) {
-        const entryPath = path.join(directory, entry.name);
-
-        if (entry.isDirectory()) {
-            files.push(...(await collectPdfFiles(entryPath)));
-        } else if (entry.isFile() && entry.name.toLowerCase().endsWith('.pdf')) {
-            files.push(entryPath);
-        }
-    }
-
-    return files.sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
-}
-
 function safePdfFilename(fileName) {
     const baseName = path.basename(fileName);
     const sourceName = path.basename(baseName, path.extname(baseName));
@@ -710,69 +693,6 @@ function requireUploadJob(projectId, jobId) {
     if (!['queued', 'running'].includes(job.status)) throw httpError('Dieser Upload ist bereits beendet.', 409);
 
     return job;
-}
-
-async function runImportJob(project, jobId) {
-    try {
-        updateProjectJob(database, jobId, { status: 'running', message: 'PDFs werden gesucht …' });
-        const sourceLocation = path.resolve(project.source_location);
-        const sourceStats = await fs.stat(sourceLocation);
-
-        if (!sourceStats.isDirectory()) throw new Error('Die konfigurierte PDF-Quelle ist kein Ordner.');
-
-        const sourceFiles = await collectPdfFiles(sourceLocation);
-        const targetDirectory = projectPdfDirectory(project.id);
-        await fs.mkdir(targetDirectory, { recursive: true });
-
-        let imported = 0;
-        let skipped = 0;
-        let errors = 0;
-
-        updateProjectJob(database, jobId, {
-            status: 'running',
-            total_count: sourceFiles.length,
-            message: `${sourceFiles.length} PDFs gefunden`,
-        });
-
-        for (const [index, sourceFile] of sourceFiles.entries()) {
-            try {
-                const result = await importPdf(sourceFile, targetDirectory);
-                if (result.imported) imported++;
-                else skipped++;
-            } catch {
-                errors++;
-            }
-
-            const processed = index + 1;
-            if (processed % 25 === 0 || processed === sourceFiles.length) {
-                updateProjectJob(database, jobId, {
-                    status: 'running',
-                    total_count: sourceFiles.length,
-                    processed_count: processed,
-                    imported_count: imported,
-                    skipped_count: skipped,
-                    error_count: errors,
-                    message: `${processed} von ${sourceFiles.length} PDFs verarbeitet`,
-                });
-            }
-        }
-
-        updateProjectJob(database, jobId, {
-            status: 'completed',
-            total_count: sourceFiles.length,
-            processed_count: sourceFiles.length,
-            imported_count: imported,
-            skipped_count: skipped,
-            error_count: errors,
-            message: `${imported} importiert, ${skipped} bereits vorhanden${errors ? `, ${errors} Fehler` : ''}`,
-        });
-    } catch (error) {
-        updateProjectJob(database, jobId, {
-            status: 'failed',
-            message: 'Import fehlgeschlagen',
-            error_message: String(error?.message || error).slice(0, 1000),
-        });
-    }
 }
 
 function runScanJob(project, jobId) {
@@ -920,7 +840,6 @@ app.post('/api/projects', async (request, response, next) => {
     try {
         const projectName = stringOrNull(request.body?.project);
         const organization = stringOrNull(request.body?.organization);
-        const sourceInput = stringOrNull(request.body?.source_location);
 
         if (!projectName || projectName.length > 120) {
             throw httpError('Projektname ist erforderlich und darf höchstens 120 Zeichen haben.');
@@ -934,26 +853,9 @@ app.post('/api/projects', async (request, response, next) => {
             throw httpError('Organisation darf höchstens 200 Zeichen haben.');
         }
 
-        let sourceLocation = null;
-        let sourceType = 'browser-upload';
-
-        if (sourceInput) {
-            if (!path.isAbsolute(sourceInput)) throw httpError('Bitte einen absoluten Pfad zum PDF-Ordner angeben.');
-            if (sourceInput.length > 4000) throw httpError('Der Pfad zum PDF-Ordner ist zu lang.');
-
-            sourceLocation = path.resolve(sourceInput);
-            const sourceStats = await fs.stat(sourceLocation).catch(error => {
-                if (error.code === 'ENOENT') throw httpError('Der angegebene PDF-Ordner existiert nicht.');
-                throw error;
-            });
-
-            if (!sourceStats.isDirectory()) throw httpError('Die PDF-Quelle muss ein Ordner sein.');
-            sourceType = 'local-directory';
-        }
-
         let project;
         try {
-            project = createProject(database, { project: projectName, organization, sourceLocation, sourceType });
+            project = createProject(database, { project: projectName, organization });
         } catch (error) {
             if (String(error.code || '').startsWith('SQLITE_CONSTRAINT')) {
                 throw httpError('Ein Projekt mit diesem Namen existiert bereits.', 409);
@@ -1053,20 +955,6 @@ app.post('/api/projects/:projectId/uploads/:jobId/complete', async (request, res
         });
 
         response.json({ job: completed });
-    } catch (error) {
-        next(error);
-    }
-});
-
-app.post('/api/projects/:projectId/import', async (request, response, next) => {
-    try {
-        const project = requireProject(request.params.projectId);
-
-        if (!project.source_location) throw httpError('Für dieses Projekt ist kein PDF-Ordner konfiguriert.');
-
-        const job = createProjectJob(database, project.id, 'import', 'Import wartet …');
-        void runImportJob(project, job.id);
-        response.status(202).json({ job });
     } catch (error) {
         next(error);
     }

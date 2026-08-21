@@ -17,7 +17,8 @@ Alle PDFs, Analyseergebnisse und Review-Entscheidungen bleiben lokal auf dem Com
 
 ```bash
 npm install
-npm start
+npm link
+RedactionResearch
 ```
 
 Danach im Browser öffnen:
@@ -25,6 +26,15 @@ Danach im Browser öffnen:
 ```text
 http://127.0.0.1:3000/
 ```
+
+Einen anderen Port festlegen:
+
+```bash
+RedactionResearch --port 4000
+```
+
+`RedactionResearch --help` zeigt alle verfügbaren Optionen. Alternativ funktioniert der bisherige Start mit
+`npm start` weiterhin.
 
 Nach Änderungen an der App muss der Server neu gestartet und die Seite neu geladen werden.
 

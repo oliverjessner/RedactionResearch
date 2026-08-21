@@ -18,6 +18,10 @@
         "node": ">=22.5.0"
     },
     "main": "server.js",
+    "bin": {
+        "RedactionResearch": "bin/redaction-research.js",
+        "redaction-research": "bin/redaction-research.js"
+    },
     "scripts": {
         "start": "node server.js",
         "download:found": "node scripts/download-found.mjs",

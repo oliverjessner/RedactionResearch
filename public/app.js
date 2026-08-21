@@ -328,11 +328,7 @@ function renderProjects() {
         headingText.append(title, organization);
         heading.append(headingText, id);
         source.className = 'project-source';
-        source.textContent = project.source_location
-            ? `PDF-Quelle: ${project.source_location}`
-            : project.source_type === 'browser-upload'
-              ? 'PDF-Quelle: über lokalen Ordnerdialog importiert'
-              : 'PDF-Quelle: verwalteter Projektordner';
+        source.textContent = `PDF-Speicher: output/download/pdfs/${project.id}`;
         stats.className = 'project-stats';
 
         for (const [label, value] of statValues) {

@@ -2,6 +2,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const test = require('node:test');
+const { DatabaseSync } = require('node:sqlite');
 
 const {
     countProblemDocuments,
@@ -17,6 +18,47 @@ const {
     startScanRun,
     updateProjectJob,
 } = require('../lib/forensic-db.js');
+
+test('opening a legacy database removes source_location without losing projects', async () => {
+    const temporaryDirectory = await fs.mkdtemp('/tmp/redaction-forensic-migration-test-');
+    const databaseFile = path.join(temporaryDirectory, 'forensic.sqlite');
+    const legacyDatabase = new DatabaseSync(databaseFile);
+
+    legacyDatabase.exec(`
+        CREATE TABLE projects (
+            id INTEGER PRIMARY KEY,
+            project TEXT NOT NULL UNIQUE,
+            organization TEXT,
+            source_type TEXT NOT NULL DEFAULT 'local-directory',
+            source_location TEXT,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+        ) STRICT;
+        INSERT INTO projects (
+            project, organization, source_type, source_location, created_at, updated_at
+        ) VALUES (
+            'legacy.example', 'Legacy Org', 'local-directory', '/old/pdf/source',
+            '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z'
+        );
+    `);
+    legacyDatabase.close();
+
+    const database = openForensicDatabase(databaseFile);
+
+    try {
+        const projectColumns = database.prepare('PRAGMA table_info(projects)').all();
+        const project = database.prepare('SELECT * FROM projects WHERE project = ?').get('legacy.example');
+
+        assert.equal(projectColumns.some(column => column.name === 'source_location'), false);
+        assert.equal(project.project, 'legacy.example');
+        assert.equal(project.organization, 'Legacy Org');
+        assert.equal(database.prepare('PRAGMA user_version').get().user_version, 3);
+        assert.equal(database.prepare('PRAGMA integrity_check').get().integrity_check, 'ok');
+    } finally {
+        database.close();
+        await fs.rm(temporaryDirectory, { recursive: true, force: true });
+    }
+});
 
 test('forensic data persists in relational SQLite state', async () => {
     const temporaryDirectory = await fs.mkdtemp('/tmp/redaction-forensic-db-test-');
