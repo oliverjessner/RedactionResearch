@@ -1,6 +1,6 @@
 # RedactionResearch – lokale Web-App
 
-![](/human_in_the_loop/public/assets/tagline.png)
+![RedactionResearch](public/assets/tagline.png)
 
 RedactionResearch prüft PDF-Dokumente darauf, ob geschwärzte Informationen technisch noch vorhanden und
 auslesbar sind. Die lokale Web-App erkennt mögliche Schwachstellen, zeigt den Text hinter verdächtigen
@@ -16,7 +16,6 @@ Alle PDFs, Analyseergebnisse und Review-Entscheidungen bleiben lokal auf dem Com
 ## Installation und Start
 
 ```bash
-cd human_in_the_loop
 npm install
 npm start
 ```
@@ -28,6 +27,17 @@ http://127.0.0.1:3000/
 ```
 
 Nach Änderungen an der App muss der Server neu gestartet und die Seite neu geladen werden.
+
+## Repository-Struktur
+
+```text
+server.js       Lokaler Webserver und API
+forensic.mjs    PDF-Scanner
+public/         Benutzeroberfläche
+lib/            Gemeinsame SQLite- und PDF-Funktionen
+test/           Automatisierte Tests
+package.json    Installation und alle Befehle
+```
 
 ## Projekt anlegen
 

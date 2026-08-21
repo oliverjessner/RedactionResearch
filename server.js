@@ -19,24 +19,24 @@ const {
     openForensicDatabase,
     saveReview,
     updateProjectJob,
-} = require('../lib/forensic-db.js');
+} = require('./lib/forensic-db.js');
 const {
     FORENSIC_RENDER_SCALE,
     combineRecoveredText,
     problemRegions,
     recoverProblemRegions,
     textItemToRect,
-} = require('../lib/pdf-text-recovery.js');
+} = require('./lib/pdf-text-recovery.js');
 
 const APP_DIR = __dirname;
-const PROJECT_DIR = path.resolve(APP_DIR, '..');
+const PROJECT_DIR = APP_DIR;
 const OUTPUT_DIR = path.join(PROJECT_DIR, 'output');
 const FORENSIC_DIR = path.join(OUTPUT_DIR, 'forensic');
 const PDF_ROOT = path.resolve(process.env.HITL_PDF_ROOT || path.join(OUTPUT_DIR, 'download', 'pdfs'));
 
 const DATABASE_FILE = path.resolve(process.env.HITL_DATABASE_FILE || path.join(FORENSIC_DIR, 'forensic.sqlite'));
 const SCANNER_FILE = path.resolve(
-    process.env.HITL_SCANNER_FILE || path.join(PROJECT_DIR, 'runs', 'fragdenstaat', 'forensic.mjs'),
+    process.env.HITL_SCANNER_FILE || path.join(PROJECT_DIR, 'forensic.mjs'),
 );
 const PDFJS_ROOT = path.dirname(require.resolve('pdfjs-dist/package.json'));
 const PDFJS_CMAP_URL = `${path.join(PDFJS_ROOT, 'cmaps')}${path.sep}`;

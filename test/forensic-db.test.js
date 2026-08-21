@@ -8,67 +8,40 @@ const {
     isDocumentScanCompleted,
     listProblems,
     listReviewDecisions,
-    migrateLegacySnapshot,
     openForensicDatabase,
     saveDocumentScanResult,
     saveReview,
 } = require('../lib/forensic-db.js');
 
-test('legacy forensic data migrates to relational SQLite state', async () => {
+test('forensic data persists in relational SQLite state', async () => {
     const temporaryDirectory = await fs.mkdtemp('/tmp/redaction-forensic-db-test-');
     const databaseFile = path.join(temporaryDirectory, 'forensic.sqlite');
     const database = openForensicDatabase(databaseFile);
     const problemId = '123:1:TEST_FINDING:0';
 
     try {
-        const summary = migrateLegacySnapshot(database, 'fragdenstaat.de', {
-            problemDocuments: [
+        saveDocumentScanResult(database, 'fragdenstaat.de', {
+            file: '123.pdf',
+            document_id: '123',
+            title: 'Problem document',
+            problems: [
                 {
-                    file: '123.pdf',
-                    document_id: '123',
-                    title: 'Problem document',
-                    highest_risk_score: 91,
-                    problem_count: 1,
-                    problems: [
-                        {
-                            type: 'TEST_FINDING',
-                            risk_score: 91,
-                            page: 1,
-                            severity: 'critical',
-                            evidence: { affected_text_items: 1 },
-                        },
-                    ],
-                    supporting_signals: [{ type: 'TEST_SIGNAL' }],
-                    scanned_at: '2026-08-17T00:00:00.000Z',
+                    problem_id: problemId,
+                    type: 'TEST_FINDING',
+                    risk_score: 91,
+                    page: 1,
+                    severity: 'critical',
+                    evidence: { affected_text_items: 1 },
                 },
             ],
-            scanProgress: {
-                completed: {
-                    '123.pdf': '2026-08-17T00:00:00.000Z',
-                    '456.pdf': '2026-08-17T00:01:00.000Z',
-                },
-                errors: {},
-                selected: 2,
-                processed_this_run: 2,
-                skipped_this_run: 0,
-                problem_documents_total: 1,
-                updated_at: '2026-08-17T00:02:00.000Z',
-            },
-            acceptedProblems: [{ problem_id: problemId, reviewed_at: '2026-08-19T00:00:00.000Z' }],
-            humanProgress: {
-                reviewed: { [problemId]: 'accepted' },
-                updated_at: '2026-08-19T00:00:00.000Z',
-            },
         });
+        saveDocumentScanResult(database, 'fragdenstaat.de', {
+            file: '456.pdf',
+            document_id: '456',
+            problems: [],
+        });
+        saveReview(database, 'fragdenstaat.de', problemId, 'accepted');
 
-        assert.deepEqual(summary, {
-            project: 'fragdenstaat.de',
-            documents: 2,
-            findings: 1,
-            reviews: 1,
-            accepted: 1,
-            missingReviews: 0,
-        });
         assert.equal(isDocumentScanCompleted(database, 'fragdenstaat.de', '456.pdf'), true);
         assert.equal(countProblemDocuments(database, 'fragdenstaat.de'), 1);
         assert.equal(listProblems(database, 'fragdenstaat.de')[0].project, 'fragdenstaat.de');

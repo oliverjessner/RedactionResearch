@@ -1,7 +1,8 @@
 {
-    "name": "RedactionResearch",
-    "version": "0.1.0",
-    "description": "start to collect ~3k redacted pdf links from fragDenStaat (14.08.2026)",
+    "name": "redaction-research",
+    "version": "1.0.0",
+    "private": true,
+    "description": "Local web app for detecting and reviewing potentially incomplete PDF redactions",
     "homepage": "https://github.com/oliverjessner/RedactionResearch#readme",
     "bugs": {
         "url": "https://github.com/oliverjessner/RedactionResearch/issues"
@@ -16,16 +17,16 @@
     "engines": {
         "node": ">=22.5.0"
     },
-    "main": "discovery.js",
+    "main": "server.js",
     "scripts": {
+        "start": "node server.js",
         "filter:open": "node scripts/filter-open-findings.mjs",
-        "scan": "node runs/fragdenstaat/forensic.mjs",
-        "migrate:forensic": "node lib/migrate-forensic-to-sqlite.mjs",
-        "migrate:pdfs": "node lib/migrate-pdfs-to-project-directory.mjs",
-        "test": "node --test test/*.test.js human_in_the_loop/test/*.test.js"
+        "scan": "node forensic.mjs",
+        "test": "node --test test/*.test.js"
     },
     "dependencies": {
         "@napi-rs/canvas": "^1.0.6",
+        "express": "^5.1.0",
         "pdfjs-dist": "^6.2.108"
     }
 }

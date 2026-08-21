@@ -3,7 +3,7 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const test = require('node:test');
 const { once } = require('node:events');
-const { openForensicDatabase, saveDocumentScanResult } = require('../../lib/forensic-db.js');
+const { openForensicDatabase, saveDocumentScanResult } = require('../lib/forensic-db.js');
 
 function createFixturePdf() {
     const objects = [
@@ -110,6 +110,7 @@ test('API safely serves, reviews, and persists SQLite findings', async () => {
         const appScript = await (await fetch(`${baseUrl}/app.js?v=20260821-1`)).text();
 
         assert.equal(appResponse.status, 200);
+        assert.match(appMarkup, /rel="icon" type="image\/webp" href="\/assets\/logo_small\.webp"/);
         assert.match(appMarkup, /id="pdf-scroll"/);
         assert.match(appMarkup, /id="pdf-pages"/);
         assert.match(appMarkup, /id="document-findings"/);

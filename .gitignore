@@ -1,5 +1,4 @@
-output/download/pdfs
-output/forensic
+scripts/muckrack.py
 node_modules/
 temp/
 dist/
