@@ -2,8 +2,9 @@
 
 ![](/human_in_the_loop/public/assets/tagline.png)
 
-Die Web-App importiert lokale PDFs, untersucht sie auf möglicherweise fehlerhafte Schwärzungen und unterstützt
-anschließend die manuelle Prüfung der gefundenen Verdachtsfälle.
+RedactionResearch prüft PDF-Dokumente darauf, ob geschwärzte Informationen technisch noch vorhanden und
+auslesbar sind. Die lokale Web-App erkennt mögliche Schwachstellen, zeigt den Text hinter verdächtigen
+Schwärzungen und lässt jeden Fund anschließend von einem Menschen bestätigen oder überspringen.
 
 Alle PDFs, Analyseergebnisse und Review-Entscheidungen bleiben lokal auf dem Computer.
 
