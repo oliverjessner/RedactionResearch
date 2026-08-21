@@ -176,9 +176,16 @@ output/download/pdfs/<project_id>/
 output/forensic/forensic.sqlite
 ```
 
-Bei einer Installation über npm oder Homebrew entsteht `output/` im Ordner, aus dem `RedactionResearch`
-gestartet wird. Mit `REDACTION_RESEARCH_OUTPUT_DIR=/absoluter/pfad` kann ein anderer Datenordner festgelegt
-werden.
+Bei einer Installation über npm oder Homebrew speichert das CLI seine Daten im lokalen Anwendungsordner:
+
+```text
+macOS:   ~/Library/Application Support/redaction-research/
+Linux:   ~/.local/share/redaction-research/
+Windows: %APPDATA%/redaction-research/
+```
+
+Mit `REDACTION_RESEARCH_OUTPUT_DIR=/absoluter/pfad` kann ein anderer Datenordner festgelegt werden. Beim Start
+über `npm start` im Repository bleibt der bisherige Projektordner `output/` aktiv.
 
 SQLite enthält unter anderem:
 

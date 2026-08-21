@@ -2,6 +2,7 @@ const assert = require('node:assert/strict');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const test = require('node:test');
+const { defaultCliDataDirectory } = require('../lib/app-paths.js');
 
 const cliFile = path.join(__dirname, '..', 'bin', 'redaction-research.js');
 
@@ -27,4 +28,23 @@ test('CLI rejects invalid ports before starting the application', () => {
         assert.equal(result.status, 1, port);
         assert.match(result.stderr, /zwischen 1 und 65535/, port);
     }
+});
+
+test('CLI uses the operating system application-data directory', () => {
+    assert.equal(
+        defaultCliDataDirectory({ platform: 'darwin', home: '/Users/test', environment: {} }),
+        '/Users/test/Library/Application Support/redaction-research',
+    );
+    assert.equal(
+        defaultCliDataDirectory({ platform: 'linux', home: '/home/test', environment: {} }),
+        '/home/test/.local/share/redaction-research',
+    );
+    assert.equal(
+        defaultCliDataDirectory({
+            platform: 'win32',
+            home: 'C:\\Users\\test',
+            environment: { APPDATA: 'C:\\Users\\test\\AppData\\Roaming' },
+        }),
+        'C:\\Users\\test\\AppData\\Roaming\\redaction-research',
+    );
 });

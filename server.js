@@ -6,6 +6,7 @@ const { createHash, randomUUID } = require('node:crypto');
 
 const { createCanvas } = require('@napi-rs/canvas');
 const express = require('express');
+const { version: APP_VERSION } = require('./package.json');
 const {
     createProject,
     createProjectJob,
@@ -1244,6 +1245,7 @@ function startServer() {
             return;
         }
 
+        console.log(`RedactionResearch v${APP_VERSION}`);
         console.log(`Human review app: http://${HOST}:${PORT}`);
         console.log(`Database: ${DATABASE_FILE}`);
         console.log(`PDF root: ${PDF_ROOT}`);

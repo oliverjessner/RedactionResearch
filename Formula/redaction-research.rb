@@ -1,8 +1,8 @@
 class RedactionResearch < Formula
   desc "Find and review potentially incomplete PDF redactions locally"
   homepage "https://github.com/oliverjessner/RedactionResearch"
-  url "https://registry.npmjs.org/redaction-research/-/redaction-research-0.1.0.tgz"
-  sha256 "840c3df26465e864c1e5c9eeb7b54fdf42afefcb9c40d9e7ceaa7ab7c404a28a"
+  url "https://registry.npmjs.org/redaction-research/-/redaction-research-0.1.1.tgz"
+  sha256 "ff23cbbe6c26cedd8a94d156696320a002ac21ac8ac2a88c4efa101dc6ee8f5a"
   license "ISC"
 
   depends_on "node"

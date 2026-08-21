@@ -2,6 +2,7 @@
 
 'use strict';
 
+const { defaultCliDataDirectory } = require('../lib/app-paths.js');
 const { version } = require('../package.json');
 
 const HELP = `RedactionResearch ${version}
@@ -81,6 +82,9 @@ function main() {
     }
 
     if (options.port !== undefined) process.env.PORT = String(options.port);
+    if (!process.env.REDACTION_RESEARCH_OUTPUT_DIR) {
+        process.env.REDACTION_RESEARCH_OUTPUT_DIR = defaultCliDataDirectory();
+    }
 
     require('../server.js').startServer();
 }

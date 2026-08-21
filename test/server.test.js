@@ -4,6 +4,7 @@ const path = require('node:path');
 const test = require('node:test');
 const { once } = require('node:events');
 const { openForensicDatabase, saveDocumentScanResult } = require('../lib/forensic-db.js');
+const { version: appVersion } = require('../package.json');
 
 function createFixturePdf() {
     const objects = [
@@ -82,6 +83,12 @@ test('API safely serves, reviews, and persists SQLite findings', async () => {
     process.env.PORT = String(port);
 
     const { startServer } = require('../server');
+    const startupLogs = [];
+    const originalConsoleLog = console.log;
+    console.log = (...values) => {
+        startupLogs.push(values.join(' '));
+        originalConsoleLog(...values);
+    };
     const server = startServer();
 
     function readReviews() {
@@ -103,6 +110,7 @@ test('API safely serves, reviews, and persists SQLite findings', async () => {
 
     try {
         await once(server, 'listening');
+        assert.equal(startupLogs[0], `RedactionResearch v${appVersion}`);
 
         const baseUrl = `http://127.0.0.1:${port}`;
         const appResponse = await fetch(`${baseUrl}/`);
@@ -347,6 +355,7 @@ test('API safely serves, reviews, and persists SQLite findings', async () => {
         const forensicJsonFiles = (await fs.readdir(temporaryDirectory)).filter(file => file.endsWith('.json'));
         assert.deepEqual(forensicJsonFiles, []);
     } finally {
+        console.log = originalConsoleLog;
         server.close();
         await once(server, 'close');
         await fs.rm(temporaryDirectory, { recursive: true, force: true });
