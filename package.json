@@ -18,7 +18,10 @@
         "url": "git+https://github.com/oliverjessner/RedactionResearch.git"
     },
     "license": "ISC",
-    "author": "Oliver Jessner",
+    "author": {
+        "name": "oliverjessner",
+        "url": "https://oliverjessner.at"
+    },
     "type": "commonjs",
     "engines": {
         "node": ">=22.5.0"
